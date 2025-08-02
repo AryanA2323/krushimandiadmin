@@ -4,7 +4,57 @@ import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+
 const requests = [
+  {
+    name: 'Amit Sharma',
+    item: 'Tomato',
+    price: 22,
+    date: '2025-07-20',
+    city: 'Indore',
+    blocked: false,
+  },
+  {
+    name: 'Amit Sharma',
+    item: 'Tomato',
+    price: 22,
+    date: '2025-07-20',
+    city: 'Indore',
+    blocked: false,
+  },
+  {
+    name: 'Amit Sharma',
+    item: 'Tomato',
+    price: 22,
+    date: '2025-07-20',
+    city: 'Indore',
+    blocked: false,
+  },
+  {
+    name: 'Amit Sharma',
+    item: 'Tomato',
+    price: 22,
+    date: '2025-07-20',
+    city: 'Indore',
+    blocked: false,
+  },
+  {
+    name: 'Amit Sharma',
+    item: 'Tomato',
+    price: 22,
+    date: '2025-07-20',
+    city: 'Indore',
+    blocked: false,
+  },
+  {
+    name: 'Amit Sharma',
+    item: 'Tomato',
+    price: 22,
+    date: '2025-07-20',
+    city: 'Indore',
+    blocked: false,
+  },
   {
     name: 'Amit Sharma',
     item: 'Tomato',
@@ -73,19 +123,19 @@ export default function FarmerRequest() {
             <Grid item xs={12} md={6} key={idx}>
               <Paper sx={styles.card}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Typography fontWeight="bold" color="success.main">
+                  <Typography fontWeight="bold" color="success.main" fontSize={18}>
                     {req.name}
                   </Typography>
                   <Typography sx={styles.blockText}>Block</Typography>
                 </Box>
-                <Typography variant="body2" mt={1}>
+                <Typography variant="body2" mt={1} mb={1} mt={2}> 
                   Wants to list: <span style={{ color: '#388e3c', fontWeight: 500 }}>{req.item}</span>
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" mb={1}>
                   Price per kg: <span style={{ color: '#388e3c', fontWeight: 500 }}>₹{req.price}</span>
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Date of request: {req.date}
+                <Typography variant="body2" color="text.secondary" >
+                  <CalendarMonthIcon sx={{ fontSize: 16, color: '#64748b' }} /> {req.date}
                 </Typography>
                 <Box sx={styles.buttonRow}>
                   <Button variant="contained" sx={styles.visitBtn}>Visit Profile</Button>
@@ -108,7 +158,7 @@ const styles = {
   main: {
     flexGrow: 1,
     p: 4,
-    marginLeft: '80px',
+    marginLeft: '10px',
   },
   headerRow: {
     display: 'flex',
@@ -127,51 +177,75 @@ const styles = {
     background: '#fff',
   },
   card: {
-    p: 2,
-    mb: 2,
-    borderRadius: 3,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    p: 0,
+    mb: 3,
+    borderRadius: 8,
+    padding: 2, 
+    boxShadow: '0 4px 24px 0 rgba(56,142,60,0.08)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 1,
-    minHeight: 170,
+    gap: 0,
+    width: 355,
+    minHeight: 210,
     position: 'relative',
-  },
-  blockText: {
-    color: 'error.main',
-    fontWeight: 'bold',
-    fontSize: 15,
-    cursor: 'pointer',
-    ml: 2,
+    background: 'linear-gradient(135deg, #e6f7ee 0%, #ffffff 100%)',
+    border: '1px solid rgba(56,142,60,0.12)',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 12px 32px 0 rgba(56,142,60,0.12)',
+      borderColor: '#388e3c',
+    },
   },
   buttonRow: {
     display: 'flex',
     gap: 1,
-    mt: 2,
+    px: 2.5,
+    pb: 2,
+    pt: 1.5,
+    mt: 'auto',
+    background: 'linear-gradient(90deg, rgba(56,142,60,0.04) 0%, rgba(56,142,60,0.01) 100%)',
+    borderTop: '1px solid rgba(56,142,60,0.08)',
   },
   visitBtn: {
-    background: '#e6f7ee',
-    color: '#388e3c',
-    fontWeight: 'bold',
+    background: 'rgba(25,118,210,0.08)',
+    color: '#1976d2',
+    fontWeight: 500,
     boxShadow: 'none',
+    fontSize: 13,
+    textTransform: 'none',
+    borderRadius: 20,
+    px: 2,
     '&:hover': {
-      background: '#c8f0d2',
-      color: '#388e3c',
-      boxShadow: 'none',
+      background: 'rgba(25,118,210,0.12)',
+      color: '#1976d2',
     },
   },
   acceptBtn: {
-    fontWeight: 'bold',
+    background: 'rgba(67,160,71,0.9)',
+    color: '#fff',
+    fontWeight: 500,
     boxShadow: 'none',
+    fontSize: 13,
+    textTransform: 'none',
+    borderRadius: 20,
+    px: 2,
     '&:hover': {
-      boxShadow: 'none',
+      background: 'rgba(67,160,71,1)',
     },
   },
   rejectBtn: {
-    fontWeight: 'bold',
+    background: 'rgba(229,57,53,0.9)',
+    color: '#fff',
+    fontWeight: 500,
     boxShadow: 'none',
+    fontSize: 13,
+    textTransform: 'none',
+    borderRadius: 10,
+    px: 2,
     '&:hover': {
-      boxShadow: 'none',
+      background: 'rgba(229,57,53,1)',
     },
-  },
+  }
 };

@@ -9,12 +9,14 @@ import Farmer_KYC from './screens/UserManagement/Farmer_KYC';
 import FarmerRequest from './screens/UserManagement/FarmerRequest';
 import FruitListing from './screens/FruitListing/fruitlisting';
 import OrderMonitoring from './screens/OrderMonitoring/OrderMonitoring';
+import FeedbackComplain from './screens/Feedback_complains/feedback_complain';
+import NotificationManager from './screens/Notification_manager/notification_manager';
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/Dashboard" element={<AdminDashboard />} />
         <Route path="/UserManagement" element={<UserManagement />} />
         <Route path="/Farmers" element={<Farmers />} />
         <Route path="/Customers" element={<Customers />} />
@@ -22,6 +24,8 @@ function App() {
         <Route path="/FarmerRequest" element={<FarmerRequest />} />
         <Route path="/FruitListing" element={<FruitListing />} />
         <Route path="/OrderMonitoring" element={<OrderMonitoring />} />
+        <Route path="/Feedback_Complaints" element={<FeedbackComplain />} />
+        <Route path="/NotificationManager" element={<NotificationManager />} />
       </Routes>
     </BrowserRouter>
   );

@@ -7,7 +7,7 @@ export default function HomeScreen() {
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
       <Typography variant="h3" mb={4}>Krushimandi</Typography>
-      <Button variant="contained" color="primary" onClick={() => navigate('/admin')}>
+      <Button variant="contained" color="primary" onClick={() => navigate('/Dashboard')}>
         Admin
       </Button>
     </Box>

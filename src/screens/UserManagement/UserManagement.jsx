@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Grid, Paper, Typography, Button, Modal, TextField } from '@mui/material';
+import { Box, Grid, Paper, Typography, Button, Modal, TextField, IconButton, Avatar, InputBase, Fade } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
 import DescriptionIcon from '@mui/icons-material/Description';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import SearchIcon from '@mui/icons-material/Search';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +16,10 @@ export default function UserManagement() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // For search bar animation (for FruitListing page, but included here for consistency)
+  const [showSearch, setShowSearch] = useState(false);
+  const [search, setSearch] = useState('');
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -23,12 +29,33 @@ export default function UserManagement() {
   };
 
   return (
-    <Box sx={{ display: 'flex', marginLeft: '80px' }}>
+    <Box sx={{ display: 'flex', marginLeft: '10px' }}>
       <AdminNavbarSlider />
       <Box sx={{ flexGrow: 1, p: 4 }}>
-        <Typography variant="h5" fontWeight="bold" mb={3}>
-          User Management
-        </Typography>
+        {/* Header Section */}
+        <Box sx={styles.headerRow}>
+          <Box>
+            <Typography variant="h5" fontWeight="bold" mb={0.5}>
+              User Management
+            </Typography>
+          </Box>
+          <Box sx={styles.headerRight}>
+            <IconButton sx={styles.notificationButton}>
+              <NotificationsIcon />
+            </IconButton>
+            <Box sx={styles.userInfo}>
+              <Avatar sx={styles.avatar}>
+                <PersonIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Super Admin
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} sm={6}>
             <Paper sx={styles.card} onClick={() => navigate('/Farmers')} style={{ cursor: 'pointer' }}>
@@ -109,30 +136,66 @@ export default function UserManagement() {
   );
 }
 
-// ...styles unchanged...
 const styles = {
-  card: {
-    p: 3,
-    minHeight: 190,
+  headerRow: {
     display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    mb: 3,
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 2,
+  },
+  notificationButton: {
+    backgroundColor: '#F8F9FA',
+    '&:hover': {
+      backgroundColor: '#EDF2F7',
+    },
+  },
+  userInfo: {
+    display: 'flex',
     alignItems: 'center',
     gap: 1,
-    width: 275, // Ensures all cards take full width of their grid cell
+  },
+  avatar: {
+    bgcolor: '#E3F2FD',
+    width: 40,
+    height: 40,
+  },
+  card: {
+    p: 3,
+    hight: 150,
+    display: 'flex',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    width: 590,
+    mt: 2,
     boxSizing: 'border-box',
   },
   icon: {
     fontSize: 40,
     color: 'success.main',
     mb: 1,
+    ml: 2,
+    mr: 5,
   },
   addAdminCard: {
     p: 2,
-    mt: 2,
+    mt: 8,
     display: 'flex',
     alignItems: 'center',
-    width: '98%',
+    width: 1200,
+    height: 100,
     boxSizing: 'border-box',
+    borderRadius: 5,
   },
 };
+
+
+
+
+
+
+

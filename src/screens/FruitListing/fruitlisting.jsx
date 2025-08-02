@@ -1,10 +1,14 @@
+
 import React, { useState } from 'react';
-import { Box, Typography, Paper, IconButton, Grid, TextField, Button, Modal } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Grid, TextField, Button, Modal, Avatar, InputBase, Fade } from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmojiFoodBeverageIcon from '@mui/icons-material/EmojiFoodBeverage';
 import AddIcon from '@mui/icons-material/Add';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import PersonIcon from '@mui/icons-material/Person';
+import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 
 const initialFruits = [
@@ -116,6 +120,7 @@ export default function FruitListing() {
   const [search, setSearch] = useState('');
   const [fruits, setFruits] = useState(initialFruits);
   const [open, setOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [newFruit, setNewFruit] = useState({
     name: '',
     category: '',
@@ -126,6 +131,8 @@ export default function FruitListing() {
     farmer: '',
     mobile: '',
   });
+
+  const navigate = useNavigate();
 
   const handleDeleteFruit = (idxToDelete) => {
     setFruits(fruits.filter((_, idx) => idx !== idxToDelete));
@@ -186,54 +193,89 @@ export default function FruitListing() {
     <Box sx={styles.root}>
       <AdminNavbarSlider selected="Fruit Listings" />
       <Box sx={styles.main}>
+        {/* Header Section */}
         <Box sx={styles.headerRow}>
-          <Typography variant="h6" fontWeight="bold" sx={styles.headerTitle}>
-            Fruit Listings
-          </Typography>
-          <Box sx={{ flexGrow: 1 }} />
-          <TextField
-            label="Search Fruits"
-            variant="outlined"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            sx={styles.searchBox}
-          />
+          <Box>
+            <Typography variant="h6" fontWeight="bold" sx={styles.headerTitle}>
+              Fruit Listings
+            </Typography>
+          </Box>
+          <Box sx={styles.headerRight}>
+            {/* Search Icon and Expandable Search Bar */}
+            <Fade in={!showSearch}>
+              <IconButton
+                sx={styles.searchIconBtn}
+                onClick={() => setShowSearch(true)}
+                style={{ display: showSearch ? 'none' : 'inline-flex' }}
+              >
+                <SearchIcon />
+              </IconButton>
+            </Fade>
+            <Fade in={showSearch}>
+              <Box sx={styles.searchBarBox} style={{ display: showSearch ? 'flex' : 'none' }}>
+                <InputBase
+                  placeholder="Search Fruits"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  sx={styles.inputBase}
+                  autoFocus
+                  onBlur={() => setShowSearch(false)}
+                />
+              </Box>
+            </Fade>
+            <IconButton sx={styles.notificationButton}>
+              <NotificationsIcon />
+            </IconButton>
+            <Box sx={styles.userInfo}>
+              <Avatar sx={styles.avatar}>
+                <PersonIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Super Admin
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
         <Grid container spacing={2} mt={1}>
           {filteredFruits.map((fruit, idx) => (
             <Grid item xs={12} md={4} key={idx}>
-              <Paper sx={{ ...styles.card, background: fruit.bg }}>
+              <Paper sx={{ ...styles.card }}>
                 <Box sx={styles.cardHeader}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <EmojiFoodBeverageIcon sx={{ color: '#388e3c', fontSize: 24 }} />
-                    <Typography fontWeight="bold" sx={styles.fruitName}>{fruit.name}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <EmojiFoodBeverageIcon sx={{ color: '#22c55e', fontSize: 28 }} />
+                    <Typography sx={styles.fruitName}>{fruit.name}</Typography>
                   </Box>
                   <IconButton sx={styles.deleteBtn} onClick={() => handleDeleteFruit(fruits.indexOf(fruit))}>
                     <DeleteIcon />
                   </IconButton>
                 </Box>
-                <Typography variant="body2" mt={1}>
-                  <b>Price:</b> ₹{fruit.price}/kg
+                
+                <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+                  <Typography sx={styles.priceTag}>₹{fruit.price}/kg</Typography>
+                  <Typography sx={styles.quantityTag}>{fruit.quantity}</Typography>
+                </Box>
+                
+                <Typography sx={styles.description}>{fruit.description}</Typography>
+                
+                <Typography sx={styles.locationText}>
+                  <LocationOnIcon sx={{ fontSize: 18, color: '#64748b' }} />
+                  {fruit.location}
                 </Typography>
-                <Typography variant="body2">
-                  <b>Description:</b> {fruit.description}
-                </Typography>
-                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                  <LocationOnIcon sx={{ fontSize: 16, color: '#388e3c', mr: 0.5 }} />
-                  <b>Location:</b>&nbsp;{fruit.location}
-                </Typography>
-                <Typography variant="body2">
-                  <b>Quantity:</b> {fruit.quantity}
-                </Typography>
-                <Typography variant="body2" sx={styles.farmerRow}>
-                  <span style={{ color: '#388e3c', fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-                    <EmojiFoodBeverageIcon sx={{ fontSize: 18, mr: 0.5 }} />
-                    Farmer: {fruit.farmer}
-                  </span>
-                  <span style={{ color: '#388e3c', fontWeight: 600, marginLeft: 12 }}>
-                    Mobile: {fruit.mobile}
-                  </span>
-                </Typography>
+                
+                <Box sx={styles.farmerRow}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <PersonIcon sx={{ fontSize: 18, color: '#22c55e' }} />
+                    <Typography sx={{ color: '#22c55e', fontWeight: 600, fontSize: '0.9rem' }}>
+                      {fruit.farmer}
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ color: '#64748b', fontSize: '0.9rem' }}>
+                    {fruit.mobile}
+                  </Typography>
+                </Box>
               </Paper>
             </Grid>
           ))}
@@ -350,19 +392,57 @@ const styles = {
   main: {
     flexGrow: 1,
     p: 4,
-    marginLeft: '80px',
+    marginLeft: '10px',
   },
   headerRow: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     mb: 2,
   },
-  searchBox: {
-    mb: 2,
-    width: '100%',
-    maxWidth: 400,
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 2,
+  },
+  notificationButton: {
+    backgroundColor: '#F8F9FA',
+    '&:hover': {
+      backgroundColor: '#EDF2F7',
+    },
+  },
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+  },
+  avatar: {
+    bgcolor: '#E3F2FD',
+    width: 40,
+    height: 40,
+  },
+  searchIconBtn: {
+    backgroundColor: '#F8F9FA',
+    '&:hover': {
+      backgroundColor: '#EDF2F7',
+    },
+    mr: 1,
+  },
+  searchBarBox: {
+    display: 'flex',
+    alignItems: 'center',
     background: '#fff',
-    mr: 2,
+    borderRadius: 2,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    px: 1,
+    width: 220,
+    height: 40,
+    mr: 1,
+  },
+  inputBase: {
+    ml: 1,
+    flex: 1,
+    fontSize: 16,
   },
   headerTitle: {
     color: '#388e3c',
@@ -374,56 +454,113 @@ const styles = {
     fontSize: '1.1rem',
   },
   card: {
-    p: 2,
+    p: 2.5,
     mb: 2,
-    borderRadius: 3,
+    borderRadius: 8,
     width: 350,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    boxShadow: '0 4px 24px 0 rgba(34,197,94,0.08)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 1,
+    gap: 1.2,
     minHeight: 170,
     position: 'relative',
-    background: '#e6f7ee',
+    background: 'linear-gradient(135deg, #e8ffd9ff 0%, #ffffffff 100%)',
+    border: '1px solid rgba(34,197,94,0.12)',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 12px 32px 0 rgba(34,197,94,0.12)',
+      borderColor: '#22c55e',
+    },
   },
   cardHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    mb: 1,
+    mb: 1.5,
+    pb: 1.5,
+    borderBottom: '1px solid rgba(34,197,94,0.08)',
+  },
+  fruitName: {
+    color: '#22c55e',
+    fontWeight: 700,
+    fontSize: '1.25rem',
+    letterSpacing: 0.3,
   },
   deleteBtn: {
-    color: '#e53935',
-    background: '#fff',
-    borderRadius: 2,
+    color: '#ef4444',
+    background: 'rgba(239,68,68,0.08)',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
     '&:hover': {
-      background: '#ffeaea',
-      color: '#b71c1c',
+      background: 'rgba(239,68,68,0.12)',
+      color: '#dc2626',
     },
   },
   farmerRow: {
-    mt: 1,
+    mt: 'auto',
+    pt: 1.5,
     display: 'flex',
     alignItems: 'center',
     gap: 2,
+    borderTop: '1px solid rgba(34,197,94,0.08)',
+  },
+  priceTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    background: 'rgba(34,197,94,0.08)',
+    color: '#16a34a',
+    fontWeight: 600,
+    px: 1.5,
+    py: 0.5,
+    borderRadius: 20,
+    fontSize: '0.9rem',
+  },
+  quantityTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    background: 'rgba(59,130,246,0.08)',
+    color: '#3b82f6',
+    fontWeight: 600,
+    px: 1.5,
+    py: 0.5,
+    borderRadius: 20,
+    fontSize: '0.9rem',
+  },
+  locationText: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0.5,
+    color: '#64748b',
+    fontSize: '0.9rem',
+    mt: 1,
+  },
+  description: {
+    color: '#4b5563',
+    fontSize: '0.95rem',
+    lineHeight: 1.5,
+    mb: 1,
   },
   addCard: {
     minHeight: 170,
     height: '92%',
-    border: '2px dashed #f9a825',
-    borderRadius: 3,
-    width: 380,
+    border: '2px dashed #22c55e',
+    borderRadius: 8,
+    width: 360,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    background: '#fffde7',
-    transition: 'box-shadow 0.2s, border-color 0.2s',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 24px 0 rgba(34,197,94,0.08)',
     '&:hover': {
-      borderColor: '#388e3c',
-      background: '#f4fff7',
-      boxShadow: '0 4px 16px rgba(56,142,60,0.08)',
+      transform: 'translateY(-4px)',
+      borderColor: '#16a34a',
+      background: 'linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)',
+      boxShadow: '0 12px 32px 0 rgba(34,197,94,0.12)',
     },
   },
   addCardContent: {
@@ -431,19 +568,20 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    py: 4,
+    gap: 2,
   },
   addIcon: {
     fontSize: 48,
-    color: '#f9a825',
-    mb: 1,
+    color: '#22c55e',
+    transition: 'transform 0.3s ease',
+    '&:hover': {
+      transform: 'rotate(90deg)',
+    },
   },
   addText: {
-    color: '#f9a825',
+    color: '#22c55e',
     fontWeight: 600,
     fontSize: 18,
-    mt: 1,
   },
 };
 
