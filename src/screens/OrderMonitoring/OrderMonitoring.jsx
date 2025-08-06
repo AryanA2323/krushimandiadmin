@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import { Box, Typography, Paper, Grid, TextField, Button, IconButton, Avatar, Modal, InputBase, Fade } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Paper, IconButton, Grid, TextField, Button, Avatar } from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
-import SearchIcon from '@mui/icons-material/Search';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../components/PageHeader';
+
+
 
 const initialOrders = [
   {
@@ -77,12 +85,23 @@ const initialOrders = [
 ];
 
 export default function OrderMonitoring() {
+  const navigate = useNavigate();
+  const [adminUser, setAdminUser] = useState(
+    JSON.parse(localStorage.getItem('adminUser')) || null
+  );
   const [search, setSearch] = useState('');
   const [orders, setOrders] = useState(initialOrders);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showSearch, setShowSearch] = useState(false);
 
+
+  useEffect(() => {
+    const storedAdmin = localStorage.getItem('adminUser');
+    if (storedAdmin) {
+      setAdminUser(JSON.parse(storedAdmin));
+    } else {
+      // Redirect to login if no admin user found
+      navigate('/AdminLogin');
+    }
+  }, [navigate]);
   const handleCancel = idx => {
     if (window.confirm('Do you want to cancel this order?')) {
       setOrders(orders =>
@@ -90,7 +109,6 @@ export default function OrderMonitoring() {
           i === idx ? { ...order, status: 'Cancelled' } : order
         )
       );
-      setModalOpen(false);
     }
   };
 
@@ -98,8 +116,7 @@ export default function OrderMonitoring() {
     order =>
       order.id.toLowerCase().includes(search.toLowerCase()) ||
       order.customer.toLowerCase().includes(search.toLowerCase()) ||
-      order.product.toLowerCase().includes(search.toLowerCase()) ||
-      order.farmer.toLowerCase().includes(search.toLowerCase())
+      order.product.toLowerCase().includes(search.toLowerCase())
   );
 
   const getStatusBox = status => {
@@ -122,137 +139,85 @@ export default function OrderMonitoring() {
     <Box sx={styles.root}>
       <AdminNavbarSlider selected="Order Monitoring" />
       <Box sx={styles.main}>
-        {/* Header Section */}
-        <Box sx={styles.headerRow}>
-          <Typography variant="h6" fontWeight="bold" sx={styles.headerTitle}>
-            Order Monitoring
-          </Typography>
-          <Box sx={styles.headerRight}>
-            <Fade in={!showSearch}>
-              <IconButton
-                sx={styles.searchIconBtn}
-                onClick={() => setShowSearch(true)}
-                style={{ display: showSearch ? 'none' : 'inline-flex' }}
-              >
-                <SearchIcon />
-              </IconButton>
-            </Fade>
-            <Fade in={showSearch}>
-              <Box sx={styles.searchBarBox} style={{ display: showSearch ? 'flex' : 'none' }}>
-                <InputBase
-                  placeholder="Search Orders"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  sx={styles.inputBase}
-                  autoFocus
-                  onBlur={() => setShowSearch(false)}
-                />
-              </Box>
-            </Fade>
-            <IconButton sx={styles.notificationButton}>
-              <NotificationsIcon />
-            </IconButton>
-            <Box sx={styles.userInfo}>
-              <Avatar sx={styles.avatar}>
-                <PersonIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Super Admin
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+        <PageHeader title="Order Monitoring" />
+
         <Grid container spacing={2}>
           {filteredOrders.map((order, idx) => (
             <Grid item xs={12} md={4} key={order.id}>
-              <Paper
-                sx={kycCardStyles.card}
-                onClick={() => {
-                  setSelectedOrder({ ...order, idx });
-                  setModalOpen(true);
-                }}
-              >
+              <Paper sx={kycCardStyles.card}>
                 <Box sx={kycCardStyles.cardHeader}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleIcon sx={{ color: '#388e3c', fontSize: 22 }} />
-                    <Typography fontWeight="bold" sx={kycCardStyles.orderId}>
-                      {order.id}
-                    </Typography>
+                  <Box sx={kycCardStyles.userInfo}>
+                    <CheckCircleIcon sx={{ color: '#388e3c', fontSize: 28 }} />
+                    <Typography sx={kycCardStyles.name}>Order {order.id}</Typography>
                   </Box>
                   {getStatusBox(order.status)}
                 </Box>
+
                 <Box sx={kycCardStyles.details}>
-                  <Typography variant="body2" sx={kycCardStyles.label}>
-                    <b>Product:</b> <span style={kycCardStyles.value}>{order.product}</span>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>
+                      <ShoppingBasketIcon sx={{ mr: 1, fontSize: 16, color: '#388e3c' }} /> Product:
+                    <span style={kycCardStyles.value}>{order.product}</span>
+                    </span>
                   </Typography>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>
+                      <PersonIcon sx={{ mr: 1, fontSize: 16, color: '#388e3c' }} /> Customer:
+                    <span style={kycCardStyles.value}>{order.customer}</span>
+                    </span>
+                  </Typography>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>
+                      <PersonIcon sx={{ mr: 1, fontSize: 16, color: '#388e3c' }} /> Farmer:
+                    <span style={kycCardStyles.value}>{order.farmer}</span>
+                    </span>
+                  </Typography>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>
+                      <AccountBalanceWalletIcon sx={{ mr: 1, fontSize: 16, color: '#388e3c' }} /> Price:
+                      <span style={kycCardStyles.value}>₹{order.price}</span>
+                    </span>
+                  </Typography>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>
+                      <ShoppingBasketIcon sx={{ mr: 1, fontSize: 16, color: '#388e3c' }} /> Quantity:
+                    <span style={kycCardStyles.value}>{order.quantity}</span>
+                    </span>
+                  </Typography>
+                  <Typography sx={kycCardStyles.date}>
+                    <CalendarMonthIcon sx={{ mr: 1,fontSize: 16, color: '#64748b' }} />
+                    {order.date}
+                  </Typography>
+                  <Box sx={{ mt: 1 }}>
+                    <span style={kycCardStyles.label}>Payment Status:</span>
+                    {getPaymentBox(order.payment)}
+                  </Box>
+                </Box>
+
+                <Box sx={kycCardStyles.buttonRow}>
+                  <Button
+                    variant="contained"
+                    startIcon={<VisibilityIcon />}
+                    sx={kycCardStyles.visitBtn}
+                  >
+                    View Details
+                  </Button>
+                  {order.status === 'In Progress' && (
+                    <Button
+                      variant="contained"
+                      color="error"
+                      startIcon={<CancelIcon />}
+                      sx={kycCardStyles.rejectBtn}
+                      onClick={() => handleCancel(idx)}
+                    >
+                      Cancel
+                    </Button>
+                  )}
                 </Box>
               </Paper>
             </Grid>
           ))}
         </Grid>
-
-        {/* Modal for order details */}
-        <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-          <Box sx={modalStyles.modalBox}>
-            {selectedOrder && (
-              <>
-                <Typography variant="h6" fontWeight="bold" sx={modalStyles.modalTitle}>
-                  Order Details
-                </Typography>
-                <Typography sx={modalStyles.detailRow}>
-                  <b>Order ID:</b> {selectedOrder.id}
-                </Typography>
-                <Typography sx={modalStyles.detailRow}>
-                  <b>Product:</b> {selectedOrder.product}
-                </Typography>
-                <Typography sx={modalStyles.detailRow}>
-                  <b>Customer:</b> {selectedOrder.customer}
-                </Typography>
-                <Typography sx={modalStyles.detailRow}>
-                  <b>Farmer:</b> {selectedOrder.farmer}
-                </Typography>
-                <Typography sx={modalStyles.detailRow}>
-                  <b>Price:</b> ₹{selectedOrder.price}
-                </Typography>
-                <Typography sx={modalStyles.detailRow}>
-                  <b>Quantity:</b> {selectedOrder.quantity}
-                </Typography>
-                <Typography sx={modalStyles.detailRow}>
-                  <b>Date:</b> {selectedOrder.date}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <b>Status:</b> {getStatusBox(selectedOrder.status)}
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <b>Payment:</b> {getPaymentBox(selectedOrder.payment)}
-                </Box>
-                {selectedOrder.status === 'In Progress' && (
-                  <Button
-                    variant="contained"
-                    color="error"
-                    startIcon={<CancelIcon />}
-                    sx={modalStyles.cancelBtn}
-                    onClick={() => handleCancel(selectedOrder.idx)}
-                  >
-                    Cancel Order
-                  </Button>
-                )}
-                <Box sx={modalStyles.buttonRow}>
-                  <Button
-                    variant="contained"
-                    sx={modalStyles.closeBtn}
-                    onClick={() => setModalOpen(false)}
-                  >
-                    Close
-                  </Button>
-                </Box>
-              </>
-            )}
-          </Box>
-        </Modal>
       </Box>
     </Box>
   );
@@ -266,6 +231,7 @@ const styles = {
     flexGrow: 1,
     p: 4,
     marginLeft: '10px',
+    backgroundColor: '#F8F9FA',
   },
   headerRow: {
     display: 'flex',
@@ -322,7 +288,6 @@ const styles = {
     letterSpacing: 0.5,
   },
 };
-
 const kycCardStyles = {
   card: {
     p: 0,
@@ -332,15 +297,15 @@ const kycCardStyles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 0,
-    minHeight: 120,
-    width: 390,
-    cursor: 'pointer',
+    width: 380,
+    minHeight: 210,
+    position: 'relative',
     background: 'linear-gradient(135deg, #f8faf8 0%, #ffffff 100%)',
     border: '1px solid rgba(56,142,60,0.12)',
     overflow: 'hidden',
-    transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
+    transition: 'all 0.3s ease',
     '&:hover': {
-      transform: 'translateY(-4px) scale(1.02)',
+      transform: 'translateY(-4px)',
       boxShadow: '0 12px 32px 0 rgba(56,142,60,0.12)',
       borderColor: '#388e3c',
     },
@@ -355,25 +320,45 @@ const kycCardStyles = {
     background: 'linear-gradient(90deg, rgba(56,142,60,0.08) 0%, rgba(56,142,60,0.02) 100%)',
     borderBottom: '1px solid rgba(56,142,60,0.08)',
   },
-  orderId: {
-    color: '#388e3c',
-    fontWeight: 700,
-    fontSize: '1.08rem',
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1.5,
+  },
+  name: {
+    fontWeight: 600,
+    color: '#2f3542',
+    fontSize: 16,
     letterSpacing: 0.2,
+  },
+  docBtn: {
+    color: '#1976d2',
+    fontWeight: 500,
+    background: 'rgba(25,118,210,0.08)',
+    borderRadius: 20,
+    textTransform: 'none',
+    boxShadow: 'none',
+    fontSize: 13,
+    px: 2,
+    py: 0.5,
+    '&:hover': {
+      background: 'rgba(25,118,210,0.12)',
+      color: '#1976d2',
+    },
   },
   details: {
     px: 2.5,
-    pt: 1.2,
+    pt: 2,
     pb: 1.5,
     display: 'flex',
     flexDirection: 'column',
-    gap: 0.7,
+    gap: 1.2,
     background: 'transparent',
   },
   label: {
     color: '#64748b',
     fontWeight: 500,
-    fontSize: 14,
+    fontSize: 13,
     display: 'inline-flex',
     alignItems: 'center',
     gap: 0.5,
@@ -384,135 +369,62 @@ const kycCardStyles = {
     fontSize: 14,
     ml: 0.5,
   },
-  statusCompleted: {
-    background: '#43a047',
-    color: '#fff',
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontWeight: 600,
-    fontSize: 13,
-    minWidth: 90,
-    width: 'fit-content',
-
-    textAlign: 'center',
-  },
-  statusProgress: {
-    background: '#ffb300',
-    color: '#fff',
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontWeight: 600,
-    fontSize: 13,
-    minWidth: 90,
-    width: 'fit-content',
-
-    textAlign: 'center',
-  },
-  statusCancelled: {
-    background: '#e53935',
-    color: '#fff',
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontWeight: 600,
-    fontSize: 13,
-    minWidth: 90,
-    width: 'fit-content',
-    textAlign: 'center',
-  },
-  paymentPaid: {
-    background: '#43a047',
-    color: '#fff',
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontWeight: 600,
-    fontSize: 13,
-    width: 'fit-content',
-
-    ml: 1,
-  },
-  paymentDue: {
-    background: '#ffb300',
-    color: '#fff',
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontWeight: 600,
-    fontSize: 13,
-    width: 'fit-content',
-
-    ml: 1,
-  },
-  paymentCOD: {
-    background: '#1976d2',
-    color: '#fff',
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontWeight: 600,
-    fontSize: 13,
-    width: 'fit-content',
-
-    ml: 1,
-  },
-};
-
-const modalStyles = {
-  modalBox: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: '#fff',
-    borderRadius: 3,
-    boxShadow: 24,
-    p: 3,
-    outline: 'none',
+  date: {
+    color: '#64748b',
+    fontSize: 12.5,
+    mt: 1,
     display: 'flex',
-    flexDirection: 'column',
-    gap: 1.5,
-  },
-  modalTitle: {
-    color: '#388e3c',
-    fontWeight: 700,
-    mb: 1.5,
-    fontSize: 20,
-    textAlign: 'center',
-  },
-  detailRow: {
-    fontSize: 15,
-    mb: 0.5,
-    color: '#222',
+    alignItems: 'center',
+    gap: 0.5,
   },
   buttonRow: {
     display: 'flex',
-    justifyContent: 'center',
-    mt: 2,
+    gap: 1,
+    px: 2.5,
+    pb: 2,
+    pt: 1.5,
+    mt: 'auto',
+    background: 'linear-gradient(90deg, rgba(56,142,60,0.04) 0%, rgba(56,142,60,0.01) 100%)',
+    borderTop: '1px solid rgba(56,142,60,0.08)',
   },
-  closeBtn: {
-    background: '#388e3c',
-    color: '#fff',
-    fontWeight: 600,
-    px: 4,
+  visitBtn: {
+    background: 'rgba(25,118,210,0.08)',
+    color: '#1976d2',
+    fontWeight: 500,
+    boxShadow: 'none',
+    fontSize: 13,
+    textTransform: 'none',
+    borderRadius: 20,
+    px: 2,
     '&:hover': {
-      background: '#256029',
-      color: '#fff',
+      background: 'rgba(25,118,210,0.12)',
+      color: '#1976d2',
     },
   },
-  cancelBtn: {
-    mt: 2,
-    fontWeight: 600,
+  acceptBtn: {
+    background: 'rgba(67,160,71,0.9)',
+    color: '#fff',
+    fontWeight: 500,
     boxShadow: 'none',
-    borderRadius: 2,
-    px: 2.5,
-    py: 1,
-    fontSize: 15,
+    fontSize: 13,
+    textTransform: 'none',
+    borderRadius: 20,
+    px: 2,
     '&:hover': {
-      background: '#b71c1c',
+      background: 'rgba(67,160,71,1)',
+    },
+  },
+  rejectBtn: {
+    background: 'rgba(229,57,53,0.9)',
+    color: '#fff',
+    fontWeight: 500,
+    boxShadow: 'none',
+    fontSize: 13,
+    textTransform: 'none',
+    borderRadius: 20,
+    px: 2,
+    '&:hover': {
+      background: 'rgba(229,57,53,1)',
     },
   },
 };

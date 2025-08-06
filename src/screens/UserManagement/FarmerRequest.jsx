@@ -128,7 +128,7 @@ export default function FarmerRequest() {
                   </Typography>
                   <Typography sx={styles.blockText}>Block</Typography>
                 </Box>
-                <Typography variant="body2" mt={1} mb={1} mt={2}> 
+                <Typography variant="body2" mt={2} mb={1} > 
                   Wants to list: <span style={{ color: '#388e3c', fontWeight: 500 }}>{req.item}</span>
                 </Typography>
                 <Typography variant="body2" mb={1}>

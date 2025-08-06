@@ -11,6 +11,9 @@ import FruitListing from './screens/FruitListing/fruitlisting';
 import OrderMonitoring from './screens/OrderMonitoring/OrderMonitoring';
 import FeedbackComplain from './screens/Feedback_complains/feedback_complain';
 import NotificationManager from './screens/Notification_manager/notification_manager';
+import SuperAdmin from './screens/super_admin/super_admin.jsx';
+import AdminLogin from './screens/admin_login/AdminLogin.jsx';
+import ForgotPassword from './screens/admin_login/ForgotPass.jsx';
 function App() {
   return (
     <BrowserRouter>
@@ -26,6 +29,9 @@ function App() {
         <Route path="/OrderMonitoring" element={<OrderMonitoring />} />
         <Route path="/Feedback_Complaints" element={<FeedbackComplain />} />
         <Route path="/NotificationManager" element={<NotificationManager />} />
+        <Route path="/SuperAdmin" element={<SuperAdmin />} />
+        <Route path="/AdminLogin" element={<AdminLogin />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
       </Routes>
     </BrowserRouter>
   );

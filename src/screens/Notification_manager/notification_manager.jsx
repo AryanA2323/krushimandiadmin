@@ -7,6 +7,12 @@ import SendIcon from '@mui/icons-material/Send';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import GroupsIcon from '@mui/icons-material/Groups';
 import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../components/PageHeader';
+
+
+
+
 
 const initialNotifications = [
   {
@@ -48,6 +54,10 @@ const initialNotifications = [
 ];
 
 export default function NotificationManager() {
+  const navigate = useNavigate();
+  const [adminUser, setAdminUser] = useState(
+    JSON.parse(localStorage.getItem('adminUser')) || null
+  );
   const [notifications, setNotifications] = useState(initialNotifications);
   const [open, setOpen] = useState(false);
   const [newNotification, setNewNotification] = useState({
@@ -84,38 +94,10 @@ export default function NotificationManager() {
       <AdminNavbarSlider selected="Notification Manager" />
       <Box sx={styles.main}>
         {/* Header */}
-        <Box sx={styles.headerRow}>
-          <Typography variant="h5" fontWeight="bold" sx={styles.headerTitle}>
-            Notification Manager
-          </Typography>
-          <Box sx={styles.headerRight}>
-            <Button
-              variant="contained"
-              startIcon={<SendIcon />}
-              sx={styles.announceBtn}
-              onClick={handleOpen}
-            >
-              Send Announcement
-            </Button>
-            <IconButton sx={styles.notificationButton}>
-              <NotificationsIcon />
-            </IconButton>
-            <Box sx={styles.userInfo}>
-              <Avatar sx={styles.avatar}>
-                <PersonIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Super Admin
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+        <PageHeader title="Notification Manager" />
 
         {/* 3 Notification Cards */}
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 3 ,display:'flex', gap:2}}>
           <Paper sx={{ ...styles.bigCard, background: 'linear-gradient(90deg,#3576ef 60%,#3576ef 100%)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <CampaignIcon sx={{ color: '#fff', fontSize: 28 }} />
@@ -222,6 +204,7 @@ const styles = {
   main: {
     flexGrow: 1,
     p: 4,
+    backgroundColor: '#F8F9FA',
     marginLeft: '10px',
   },
   headerRow: {
@@ -268,7 +251,7 @@ const styles = {
     },
     height: 40,
     textTransform: 'none',
-    mr: 1, // Add margin right to keep it close to notification icon
+    mr: 1,
   },
   bigCard: {
     borderRadius: 5,
@@ -280,7 +263,7 @@ const styles = {
     flexDirection: 'column',
     gap: 1.5,
     minHeight: 150,
-    width: 1175,
+    width: '30%'  ,
   },
   bigCardTitle: {
     fontWeight: 700,

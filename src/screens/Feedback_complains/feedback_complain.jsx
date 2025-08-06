@@ -7,6 +7,10 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../components/PageHeader';
+import { adminUsers } from '../super_admin/super_admin';
+
 
 const feedbacks = [
   {
@@ -108,7 +112,19 @@ const stats = [
   },
 ];
 
+
+
+
+
 export default function FeedbackComplain() {
+  const [feedbackList, setFeedbackList] = useState(feedbacks);
+const [assignModalOpen, setAssignModalOpen] = useState(false);
+const [selectedComplaint, setSelectedComplaint] = useState(null);
+
+  const [adminUser, setAdminUser] = useState(
+    JSON.parse(localStorage.getItem('adminUser')) || null
+  );
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
 
@@ -121,6 +137,37 @@ export default function FeedbackComplain() {
     setOpen(false);
     setSelected(null);
   };
+
+  const handleMarkResolved = (complaintId) => {
+  setFeedbackList(prevList => 
+    prevList.map(item => 
+      item.id === complaintId 
+        ? { ...item, status: 'resolved' }
+        : item
+    )
+  );
+};
+
+const handleAssignModalOpen = (complaint) => {
+  setSelectedComplaint(complaint);
+  setAssignModalOpen(true);
+};
+
+const handleAssignModalClose = () => {
+  setAssignModalOpen(false);
+  setSelectedComplaint(null);
+};
+
+const handleAssignAdmin = (adminName) => {
+  setFeedbackList(prevList => 
+    prevList.map(item => 
+      item.id === selectedComplaint.id 
+        ? { ...item, assigned: adminName }
+        : item
+    )
+  );
+  handleAssignModalClose();
+};
 
   // Badge helpers
   const getPriorityBadge = priority => {
@@ -143,27 +190,7 @@ export default function FeedbackComplain() {
       <AdminNavbarSlider selected="Feedback and Complaints section" />
       <Box sx={styles.main}>
         {/* Header */}
-        <Box sx={styles.headerRow}>
-          <Typography variant="h6" fontWeight="bold" sx={styles.headerTitle}>
-            Feedback & Complaints
-          </Typography>
-          <Box sx={styles.headerRight}>
-            <IconButton sx={styles.notificationButton}>
-              <NotificationsIcon />
-            </IconButton>
-            <Box sx={styles.userInfo}>
-              <Avatar sx={styles.avatar}>
-                <PersonIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Super Admin
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+        <PageHeader title="Feedback & Complaints" />
 
         {/* Stats Cards */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -190,50 +217,95 @@ export default function FeedbackComplain() {
 
         {/* Complaints List */}
         <Grid container spacing={2}>
-          {feedbacks.map((f, idx) => (
-            <Grid item xs={12} key={f.id}>
-              <Paper sx={styles.complainCard}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography sx={styles.complainTitle}>{f.subject}</Typography>
-                  {getPriorityBadge(f.priority)}
-                  {getStatusBadge(f.status)}
-                </Box>
-                <Typography sx={styles.complainUser}>
-                  <b>User:</b> {f.name}
-                </Typography>
-                <Typography sx={styles.complainDesc}>{f.description}</Typography>
-                <Box sx={styles.complainMeta}>
-                  <Typography sx={styles.complainMetaText}>
-                    ID: {f.id}
-                  </Typography>
-                  <Typography sx={styles.complainMetaText}>
-                    Created: {f.date}
-                  </Typography>
-                  {f.assigned && (
-                    <Typography sx={styles.complainMetaText}>
-                      Assigned to: {f.assigned}
-                    </Typography>
-                  )}
-                </Box>
-                <Box sx={styles.complainActions}>
-                  {f.status === 'open' && (
-                    <>
-                      <Button sx={styles.actionBtnBlue}>Assign to Team</Button>
-                      <Button sx={styles.actionBtnGreen}>Start Resolution</Button>
-                    </>
-                  )}
-                  {f.status === 'in-progress' && (
-                    <Button sx={styles.actionBtnGreen}>Mark Resolved</Button>
-                  )}
-                  <Button sx={styles.actionBtn} onClick={() => handleOpen(f)}>
-                    View Details
-                  </Button>
-                  <Button sx={styles.actionBtnOutline}>Contact User</Button>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
+
+{feedbackList.map((f, idx) => (
+  <Grid item xs={12} key={f.id}>
+    <Paper sx={styles.complainCard}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+        <Box>
+          <Typography sx={styles.complainTitle}>
+            {f.subject}
+            {getPriorityBadge(f.priority)}
+          </Typography>
+          <Typography sx={styles.complainUser}>
+            By: {f.name} ({f.type})
+          </Typography>
+        </Box>
+        <Box>{getStatusBadge(f.status)}</Box>
+      </Box>
+
+      <Typography sx={styles.complainDesc}>
+        {f.description}
+      </Typography>
+
+      <Box sx={styles.complainMeta}>
+        <Typography sx={styles.complainMetaText}>
+          <b>ID:</b> {f.id}
+        </Typography>
+        <Typography sx={styles.complainMetaText}>
+          <b>Date:</b> {f.date}
+        </Typography>
+      </Box>
+        <Typography sx={styles.complainAssigned}>
+          <b>Assigned To:</b> {f.assigned || 'No admin assigned'}
+        </Typography>
+
+      <Box sx={styles.complainActions}>
+        {f.status === 'open' && (
+          <Button 
+            sx={styles.actionBtnBlue}
+            onClick={() => handleAssignModalOpen(f)}
+          >
+            Assign to Team
+          </Button>
+        )}
+        {f.status === 'in-progress' && (
+          <Button 
+            sx={styles.actionBtnGreen}
+            onClick={() => handleMarkResolved(f.id)}
+          >
+            Mark Resolved
+          </Button>
+        )}
+        <Button sx={styles.actionBtn} onClick={() => handleOpen(f)}>
+          View Details
+        </Button>
+        <Button sx={styles.actionBtnOutline}>Contact User</Button>
+      </Box>
+    </Paper>
+  </Grid>
+))}
         </Grid>
+{/* Add the Admin Assignment Modal */}
+<Modal open={assignModalOpen} onClose={handleAssignModalClose}>
+  <Box sx={modalStyles.modalBox}>
+    <Typography variant="h6" fontWeight="bold" sx={modalStyles.modalTitle}>
+      Assign Complaint
+    </Typography>
+    <Box sx={modalStyles.adminList}>
+      {adminUsers.map((admin) => (
+        <Box key={admin.email} sx={modalStyles.adminRow}>
+          <Typography>{admin.name}</Typography>
+          <Button 
+            variant="contained"
+            size="small"
+            onClick={() => handleAssignAdmin(admin.name)}
+            sx={modalStyles.assignBtn}
+          >
+            Assign
+          </Button>
+        </Box>
+      ))}
+    </Box>
+    <Button 
+      variant="outlined" 
+      onClick={handleAssignModalClose}
+      sx={modalStyles.cancelBtn}
+    >
+      Cancel
+    </Button>
+  </Box>
+</Modal>
 
         {/* Modal for details */}
         <Modal open={open} onClose={handleClose}>
@@ -293,6 +365,7 @@ const styles = {
     flexGrow: 1,
     p: 4,
     marginLeft: '10px',
+    backgroundColor: '#F8F9FA',
   },
   headerRow: {
     display: 'flex',
@@ -362,6 +435,12 @@ const styles = {
       boxShadow: '0 4px 16px rgba(56,142,60,0.08)',
       borderColor: '#388e3c',
     },
+  },
+  complainAssigned: {
+    fontSize: 14,
+    color: '#666',
+    mt: 1,
+    mb: 1,
   },
   complainTitle: {
     fontWeight: 600,
@@ -548,6 +627,38 @@ const badgeStyles = {
 };
 
 const modalStyles = {
+  adminList: {
+    mt: 2,
+    mb: 3,
+    maxHeight: 300,
+    overflowY: 'auto',
+  },
+  adminRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    py: 1.5,
+    px: 1,
+    borderBottom: '1px solid #eee',
+    '&:last-child': {
+      borderBottom: 'none',
+    },
+  },
+  assignBtn: {
+    backgroundColor: '#388e3c',
+    color: '#fff',
+    textTransform: 'none',
+    '&:hover': {
+      backgroundColor: '#2e7d32',
+    },
+  },
+  cancelBtn: {
+    mt: 2,
+    color: '#666',
+    borderColor: '#666',
+    textTransform: 'none',
+  },
+
   modalBox: {
     position: 'absolute',
     top: '50%',

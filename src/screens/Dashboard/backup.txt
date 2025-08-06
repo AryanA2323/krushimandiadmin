@@ -26,8 +26,6 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import PageHeader from '../../components/PageHeader';
 
 
 ChartJS.register(
@@ -89,15 +87,37 @@ const priceData = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [adminUser, setAdminUser] = useState(
-    JSON.parse(localStorage.getItem('adminUser')) || null
-  );
   return (
     <Box sx={styles.root}>
       <AdminNavbarSlider />
       <Box component="main" sx={styles.main}>
         {/* Header Section */}
-        <PageHeader title="Dashboard Overview" />
+        <Box sx={styles.header}>
+          <Box>
+            <Typography variant="h5" sx={styles.title}>
+              Dashboard Overview
+            </Typography>
+          </Box>
+          <Box sx={styles.headerRight}>
+            <IconButton 
+              sx={styles.notificationButton}
+              onClick={() => navigate('/NotificationManager')}
+            >
+              <NotificationsIcon />
+            </IconButton>
+            <Box sx={styles.userInfo}>
+              <Avatar sx={styles.avatar}>
+                <PersonIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Super Admin
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
 
         {/* Metrics Cards */}
         <Grid container spacing={3} sx={{ mt: 1 }}>
@@ -407,7 +427,6 @@ const styles = {
   main: {
     flexGrow: 1,
     p: 3,
-    backgroundColor: '#F8F9FA',
   },
   header: {
     display: 'flex',

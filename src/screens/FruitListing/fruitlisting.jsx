@@ -1,385 +1,112 @@
 
 import React, { useState } from 'react';
-import { Box, Typography, Paper, IconButton, Grid, TextField, Button, Modal, Avatar, InputBase, Fade } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Grid, InputBase, Button, Avatar, Fade } from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmojiFoodBeverageIcon from '@mui/icons-material/EmojiFoodBeverage';
+import PersonIcon from '@mui/icons-material/Person';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AddIcon from '@mui/icons-material/Add';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
-
-const initialFruits = [
-  {
-    name: 'Banana',
-    price: 30,
-    description: 'Organic bananas, rich in nutrients.',
-    location: 'Jalgaon, Maharashtra',
-    quantity: '15-18 tons',
-    farmer: 'Rahul Singh',
-    mobile: '9988776655',
-    bg: '#e6f7ee',
-  },
-  {
-    name: 'Apple',
-    price: 120,
-    description: 'Fresh apples from Himachal.',
-    location: 'Shimla, Himachal Pradesh',
-    quantity: '10-12 tons',
-    farmer: 'Amit Sharma',
-    mobile: '9876543210',
-    bg: '#fdfbe6',
-  },
-  {
-    name: 'Mango',
-    price: 60,
-    description: 'Alphonso mangoes, sweet and juicy.',
-    location: 'Ratnagiri, Maharashtra',
-    quantity: '20-25 tons',
-    farmer: 'Priya Patel',
-    mobile: '9123456789',
-    bg: '#e6f1fb',
-  },
-  {
-    name: 'Orange',
-    price: 40,
-    description: 'Nagpur oranges, vitamin C rich.',
-    location: 'Nagpur, Maharashtra',
-    quantity: '18-20 tons',
-    farmer: 'Sneha Joshi',
-    mobile: '9988771122',
-    bg: '#e6f7ee',
-  },
-  {
-    name: 'Grapes',
-    price: 55,
-    description: 'Seedless green grapes.',
-    location: 'Nashik, Maharashtra',
-    quantity: '12-15 tons',
-    farmer: 'Vikas Jain',
-    mobile: '9988773344',
-    bg: '#fdfbe6',
-  },
-  {
-    name: 'Grapes',
-    price: 55,
-    description: 'Seedless green grapes.',
-    location: 'Nashik, Maharashtra',
-    quantity: '12-15 tons',
-    farmer: 'Vikas Jain',
-    mobile: '9988773344',
-    bg: '#fdfbe6',
-  },
-  {
-    name: 'Grapes',
-    price: 55,
-    description: 'Seedless green grapes.',
-    location: 'Nashik, Maharashtra',
-    quantity: '12-15 tons',
-    farmer: 'Vikas Jain',
-    mobile: '9988773344',
-    bg: '#fdfbe6',
-  },
-  {
-    name: 'Grapes',
-    price: 55,
-    description: 'Seedless green grapes.',
-    location: 'Nashik, Maharashtra',
-    quantity: '12-15 tons',
-    farmer: 'Vikas Jain',
-    mobile: '9988773344',
-    bg: '#fdfbe6',
-  },
-  {
-    name: 'Grapes',
-    price: 55,
-    description: 'Seedless green grapes.',
-    location: 'Nashik, Maharashtra',
-    quantity: '12-15 tons',
-    farmer: 'Vikas Jain',
-    mobile: '9988773344',
-    bg: '#fdfbe6',
-  },
-  {
-    name: 'Papaya',
-    price: 25,
-    description: 'Sweet papayas, ready to eat.',
-    location: 'Surat, Gujarat',
-    quantity: '8-10 tons',
-    farmer: 'Meena Gupta',
-    mobile: '9988775566',
-    bg: '#e6f1fb',
-  },
+import PageHeader from '../../components/PageHeader';
+const fruits = [
+  { name: 'Alphonso Mango', price: 120, quantity: '10 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Fresh mangoes from farm' },
+  { name: 'Banana', price: 45, quantity: '15 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Organic bananas' },
+  { name: 'Apple', price: 90, quantity: '8 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Premium quality apples' },
+  { name: 'Grapes', price: 60, quantity: '12 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Sweet and juicy grapes' },
+  { name: 'Orange', price: 70, quantity: '20 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Citrus oranges' },
+  { name: 'Pineapple', price: 80, quantity: '5 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Fresh pineapples' },
+  { name: 'Papaya', price: 50, quantity: '10 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Ripe papayas' },
+  { name: 'Watermelon', price: 30, quantity: '25 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Refreshing watermelons' },
 ];
 
-const bgColors = ['#e6f7ee', '#fdfbe6', '#e6f1fb'];
-
 export default function FruitListing() {
+  const [adminUser, setAdminUser] = useState(
+    JSON.parse(localStorage.getItem('adminUser')) || null
+  );
+  
   const [search, setSearch] = useState('');
-  const [fruits, setFruits] = useState(initialFruits);
-  const [open, setOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [newFruit, setNewFruit] = useState({
-    name: '',
-    category: '',
-    price: '',
-    description: '',
-    location: '',
-    quantity: '',
-    farmer: '',
-    mobile: '',
-  });
-
   const navigate = useNavigate();
 
-  const handleDeleteFruit = (idxToDelete) => {
-    setFruits(fruits.filter((_, idx) => idx !== idxToDelete));
-  };
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    setNewFruit({
-      name: '',
-      category: '',
-      price: '',
-      description: '',
-      location: '',
-      quantity: '',
-      farmer: '',
-      mobile: '',
-    });
-  };
-
-  const handleChange = e => {
-    setNewFruit({ ...newFruit, [e.target.name]: e.target.value });
-  };
-
-  const handleAddFruit = () => {
-    if (
-      newFruit.name &&
-      newFruit.price &&
-      newFruit.description &&
-      newFruit.location &&
-      newFruit.quantity &&
-      newFruit.farmer &&
-      newFruit.mobile
-    ) {
-      setFruits([
-        ...fruits,
-        {
-          name: newFruit.name,
-          price: newFruit.price,
-          description: newFruit.description,
-          location: newFruit.location,
-          quantity: newFruit.quantity,
-          farmer: newFruit.farmer,
-          mobile: newFruit.mobile,
-          bg: bgColors[fruits.length % bgColors.length],
-        },
-      ]);
-      handleClose();
-    }
-  };
-
   const filteredFruits = fruits.filter(fruit =>
-    fruit.name.toLowerCase().includes(search.toLowerCase()) ||
-    fruit.farmer.toLowerCase().includes(search.toLowerCase()) ||
-    fruit.location.toLowerCase().includes(search.toLowerCase())
+    fruit.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <Box sx={styles.root}>
-      <AdminNavbarSlider selected="Fruit Listings" />
+      <AdminNavbarSlider selected="Fruit Listing" />
       <Box sx={styles.main}>
-        {/* Header Section */}
-        <Box sx={styles.headerRow}>
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={styles.headerTitle}>
-              Fruit Listings
-            </Typography>
-          </Box>
-          <Box sx={styles.headerRight}>
-            {/* Search Icon and Expandable Search Bar */}
-            <Fade in={!showSearch}>
-              <IconButton
-                sx={styles.searchIconBtn}
-                onClick={() => setShowSearch(true)}
-                style={{ display: showSearch ? 'none' : 'inline-flex' }}
-              >
-                <SearchIcon />
-              </IconButton>
-            </Fade>
-            <Fade in={showSearch}>
-              <Box sx={styles.searchBarBox} style={{ display: showSearch ? 'flex' : 'none' }}>
-                <InputBase
-                  placeholder="Search Fruits"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  sx={styles.inputBase}
-                  autoFocus
-                  onBlur={() => setShowSearch(false)}
-                />
-              </Box>
-            </Fade>
-            <IconButton sx={styles.notificationButton}>
-              <NotificationsIcon />
-            </IconButton>
-            <Box sx={styles.userInfo}>
-              <Avatar sx={styles.avatar}>
-                <PersonIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Super Admin
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-        <Grid container spacing={2} mt={1}>
+        <PageHeader title="Fruit Listing" />
+
+        <Grid container spacing={2}>
           {filteredFruits.map((fruit, idx) => (
             <Grid item xs={12} md={4} key={idx}>
-              <Paper sx={{ ...styles.card }}>
-                <Box sx={styles.cardHeader}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <EmojiFoodBeverageIcon sx={{ color: '#22c55e', fontSize: 28 }} />
-                    <Typography sx={styles.fruitName}>{fruit.name}</Typography>
+              <Paper sx={kycCardStyles.card}>
+                <Box sx={kycCardStyles.cardHeader}>
+                  <Box sx={kycCardStyles.userInfo}>
+                    <EmojiFoodBeverageIcon sx={{ color: 'success.main', fontSize: 28 }} />
+                    <Typography sx={kycCardStyles.name}>{fruit.name}</Typography>
                   </Box>
-                  <IconButton sx={styles.deleteBtn} onClick={() => handleDeleteFruit(fruits.indexOf(fruit))}>
+                  <IconButton sx={kycCardStyles.deleteBtn}>
                     <DeleteIcon />
                   </IconButton>
                 </Box>
-                
-                <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
-                  <Typography sx={styles.priceTag}>₹{fruit.price}/kg</Typography>
-                  <Typography sx={styles.quantityTag}>{fruit.quantity}</Typography>
+
+                <Box sx={kycCardStyles.details}>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>💰 Price:</span>
+                    <span style={kycCardStyles.value}>₹{fruit.price}/kg</span>
+                  </Typography>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>📦 Quantity:</span>
+                    <span style={kycCardStyles.value}>{fruit.quantity}</span>
+                  </Typography>
+                  <Typography variant="body2">
+                    <span style={kycCardStyles.label}>
+                      <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#388e3c' }} /> Location:
+                    </span>
+                    <span style={kycCardStyles.value}>{fruit.location}</span>
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1, color: '#64748b', fontSize: '0.9rem' }}>
+                    {fruit.description}
+                  </Typography>
                 </Box>
-                
-                <Typography sx={styles.description}>{fruit.description}</Typography>
-                
-                <Typography sx={styles.locationText}>
-                  <LocationOnIcon sx={{ fontSize: 18, color: '#64748b' }} />
-                  {fruit.location}
-                </Typography>
-                
-                <Box sx={styles.farmerRow}>
+
+                <Box sx={kycCardStyles.buttonRow}>
+                  <Button
+                    variant="contained"
+                    startIcon={<VisibilityIcon />}
+                    sx={kycCardStyles.visitBtn}
+                  >
+                    View Details
+                  </Button>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <PersonIcon sx={{ fontSize: 18, color: '#22c55e' }} />
-                    <Typography sx={{ color: '#22c55e', fontWeight: 600, fontSize: '0.9rem' }}>
+                    <PersonIcon sx={{ fontSize: 18, color: '#64748b' }} />
+                    <Typography sx={{ color: '#64748b', fontSize: '0.9rem' }}>
                       {fruit.farmer}
                     </Typography>
                   </Box>
-                  <Typography sx={{ color: '#64748b', fontSize: '0.9rem' }}>
-                    {fruit.mobile}
-                  </Typography>
                 </Box>
               </Paper>
             </Grid>
           ))}
-          {/* Add Card */}
+          
+          {/* Add New Fruit Card */}
           <Grid item xs={12} md={4}>
-            <Paper
-              sx={styles.addCard}
-              onClick={handleOpen}
-              elevation={0}
-            >
-              <Box sx={styles.addCardContent}>
-                <AddIcon sx={styles.addIcon} />
-                <Typography sx={styles.addText}>Add New Fruit</Typography>
+            <Paper sx={kycCardStyles.addCard}>
+              <Box sx={kycCardStyles.addCardContent}>
+                <AddIcon sx={kycCardStyles.addIcon} />
+                <Typography sx={kycCardStyles.addText}>
+                  Add New Fruit
+                </Typography>
               </Box>
             </Paper>
           </Grid>
         </Grid>
-        <Modal open={open} onClose={handleClose}>
-          <Box sx={modalStyles.modalBox}>
-            <Typography variant="h6" fontWeight="bold" sx={modalStyles.modalTitle}>
-              Add New Fruit
-            </Typography>
-            <TextField
-              label="Fruit Name"
-              name="name"
-              value={newFruit.name}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <TextField
-              label="Category"
-              name="category"
-              value={newFruit.category}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <TextField
-              label="Price"
-              name="price"
-              value={newFruit.price}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <TextField
-              label="Description"
-              name="description"
-              value={newFruit.description}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <TextField
-              label="Location"
-              name="location"
-              value={newFruit.location}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <TextField
-              label="Quantity (in tons)"
-              name="quantity"
-              value={newFruit.quantity}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <TextField
-              label="Farmer Name"
-              name="farmer"
-              value={newFruit.farmer}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <TextField
-              label="Farmer Mobile"
-              name="mobile"
-              value={newFruit.mobile}
-              onChange={handleChange}
-              fullWidth
-              sx={modalStyles.input}
-              size="small"
-            />
-            <Box sx={modalStyles.buttonRow}>
-              <Button variant="contained" sx={modalStyles.addModalBtn} onClick={handleAddFruit}>
-                Add
-              </Button>
-              <Button variant="outlined" sx={modalStyles.cancelBtn} onClick={handleClose}>
-                Cancel
-              </Button>
-            </Box>
-          </Box>
-        </Modal>
       </Box>
     </Box>
   );
@@ -393,12 +120,17 @@ const styles = {
     flexGrow: 1,
     p: 4,
     marginLeft: '10px',
+    backgroundColor: '#F8F9FA',
   },
   headerRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    mb: 2,
+    mb: 3,
+  },
+  headerTitle: {
+    color: '#388e3c',
+    letterSpacing: 0.5,
   },
   headerRight: {
     display: 'flex',
@@ -444,49 +176,49 @@ const styles = {
     flex: 1,
     fontSize: 16,
   },
-  headerTitle: {
-    color: '#388e3c',
-    letterSpacing: 0.5,
-  },
-  fruitName: {
-    color: '#388e3c',
-    fontWeight: 600,
-    fontSize: '1.1rem',
-  },
+};
+const kycCardStyles = {
   card: {
-    p: 2.5,
-    mb: 2,
+    p: 0,
+    mb: 3,
     borderRadius: 8,
-    width: 350,
-    boxShadow: '0 4px 24px 0 rgba(34,197,94,0.08)',
+    boxShadow: '0 4px 24px 0 rgba(56,142,60,0.08)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 1.2,
-    minHeight: 170,
+    gap: 0,
+    width: 380,
+    minHeight: 210,
     position: 'relative',
-    background: 'linear-gradient(135deg, #e8ffd9ff 0%, #ffffffff 100%)',
-    border: '1px solid rgba(34,197,94,0.12)',
+    background: 'linear-gradient(135deg, #f8faf8 0%, #ffffff 100%)',
+    border: '1px solid rgba(56,142,60,0.12)',
     overflow: 'hidden',
     transition: 'all 0.3s ease',
     '&:hover': {
       transform: 'translateY(-4px)',
-      boxShadow: '0 12px 32px 0 rgba(34,197,94,0.12)',
-      borderColor: '#22c55e',
+      boxShadow: '0 12px 32px 0 rgba(56,142,60,0.12)',
+      borderColor: '#388e3c',
     },
   },
   cardHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    mb: 1.5,
+    px: 2.5,
+    pt: 2,
     pb: 1.5,
-    borderBottom: '1px solid rgba(34,197,94,0.08)',
+    background: 'linear-gradient(90deg, rgba(56,142,60,0.08) 0%, rgba(56,142,60,0.02) 100%)',
+    borderBottom: '1px solid rgba(56,142,60,0.08)',
   },
-  fruitName: {
-    color: '#22c55e',
-    fontWeight: 700,
-    fontSize: '1.25rem',
-    letterSpacing: 0.3,
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1.5,
+  },
+  name: {
+    fontWeight: 600,
+    color: '#2f3542',
+    fontSize: 16,
+    letterSpacing: 0.2,
   },
   deleteBtn: {
     color: '#ef4444',
@@ -499,68 +231,72 @@ const styles = {
       color: '#dc2626',
     },
   },
-  farmerRow: {
-    mt: 'auto',
-    pt: 1.5,
+  details: {
+    px: 2.5,
+    pt: 2,
+    pb: 1.5,
     display: 'flex',
-    alignItems: 'center',
-    gap: 2,
-    borderTop: '1px solid rgba(34,197,94,0.08)',
+    flexDirection: 'column',
+    gap: 1.2,
+    background: 'transparent',
   },
-  priceTag: {
+  label: {
+    color: '#64748b',
+    fontWeight: 500,
+    fontSize: 13,
     display: 'inline-flex',
-    alignItems: 'center',
-    background: 'rgba(34,197,94,0.08)',
-    color: '#16a34a',
-    fontWeight: 600,
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontSize: '0.9rem',
-  },
-  quantityTag: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    background: 'rgba(59,130,246,0.08)',
-    color: '#3b82f6',
-    fontWeight: 600,
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 20,
-    fontSize: '0.9rem',
-  },
-  locationText: {
-    display: 'flex',
     alignItems: 'center',
     gap: 0.5,
-    color: '#64748b',
-    fontSize: '0.9rem',
-    mt: 1,
   },
-  description: {
-    color: '#4b5563',
-    fontSize: '0.95rem',
-    lineHeight: 1.5,
-    mb: 1,
+  value: {
+    color: '#334155',
+    fontWeight: 500,
+    fontSize: 14,
+    ml: 0.5,
+  },
+  buttonRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 1,
+    px: 2.5,
+    pb: 2,
+    pt: 1.5,
+    mt: 'auto',
+    background: 'linear-gradient(90deg, rgba(56,142,60,0.04) 0%, rgba(56,142,60,0.01) 100%)',
+    borderTop: '1px solid rgba(56,142,60,0.08)',
+  },
+  visitBtn: {
+    background: 'rgba(25,118,210,0.08)',
+    color: '#1976d2',
+    fontWeight: 500,
+    boxShadow: 'none',
+    fontSize: 13,
+    textTransform: 'none',
+    borderRadius: 20,
+    px: 2,
+    '&:hover': {
+      background: 'rgba(25,118,210,0.12)',
+      color: '#1976d2',
+    },
   },
   addCard: {
-    minHeight: 170,
-    height: '92%',
-    border: '2px dashed #22c55e',
+    minHeight: 210,
+    border: '2px dashed #388e3c',
     borderRadius: 8,
-    width: 360,
+    width: 380,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
     transition: 'all 0.3s ease',
-    boxShadow: '0 4px 24px 0 rgba(34,197,94,0.08)',
+    boxShadow: '0 4px 24px 0 rgba(56,142,60,0.08)',
     '&:hover': {
       transform: 'translateY(-4px)',
-      borderColor: '#16a34a',
+      borderColor: '#2f6f31',
       background: 'linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)',
-      boxShadow: '0 12px 32px 0 rgba(34,197,94,0.12)',
+      boxShadow: '0 12px 32px 0 rgba(56,142,60,0.12)',
     },
   },
   addCardContent: {
@@ -572,86 +308,15 @@ const styles = {
   },
   addIcon: {
     fontSize: 48,
-    color: '#22c55e',
+    color: '#388e3c',
     transition: 'transform 0.3s ease',
     '&:hover': {
       transform: 'rotate(90deg)',
     },
   },
   addText: {
-    color: '#22c55e',
+    color: '#388e3c',
     fontWeight: 600,
     fontSize: 18,
-  },
-};
-
-const modalStyles = {
-  modalBox: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 370,
-    bgcolor: '#fff',
-    borderRadius: 3,
-    boxShadow: 24,
-    p: 3,
-    outline: 'none',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 1.5,
-    border: '6px solid #f9a825',
-  },
-  modalTitle: {
-    color: '#f9a825',
-    fontWeight: 700,
-    mb: 1.5,
-    fontSize: 20,
-  },
-  input: {
-    mb: 1,
-    background: '#f7faf7',
-    borderRadius: 1,
-  },
-  buttonRow: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: 2,
-    mt: 2,
-  },
-  addBtn: {
-    background: '#f9a825',
-    color: '#fff',
-    fontWeight: 600,
-    ml: 2,
-    px: 3,
-    boxShadow: 'none',
-    '&:hover': {
-      background: '#e6b800',
-      color: '#fff',
-      boxShadow: 'none',
-    },
-  },
-  addModalBtn: {
-    background: '#388e3c',
-    color: '#fff',
-    fontWeight: 600,
-    px: 3,
-    boxShadow: 'none',
-    '&:hover': {
-      background: '#256029',
-      color: '#fff',
-      boxShadow: 'none',
-    },
-  },
-  cancelBtn: {
-    color: '#388e3c',
-    borderColor: '#388e3c',
-    fontWeight: 600,
-    px: 3,
-    '&:hover': {
-      borderColor: '#256029',
-      color: '#256029',
-    },
   },
 };

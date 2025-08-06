@@ -8,8 +8,15 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../components/PageHeader';
+
+
+
 
 export default function UserManagement() {
+  const [adminUser, setAdminUser] = useState(
+    JSON.parse(localStorage.getItem('adminUser')) || null
+  );
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState('');
@@ -33,29 +40,7 @@ export default function UserManagement() {
       <AdminNavbarSlider />
       <Box sx={{ flexGrow: 1, p: 4 }}>
         {/* Header Section */}
-        <Box sx={styles.headerRow}>
-          <Box>
-            <Typography variant="h5" fontWeight="bold" mb={0.5}>
-              User Management
-            </Typography>
-          </Box>
-          <Box sx={styles.headerRight}>
-            <IconButton sx={styles.notificationButton}>
-              <NotificationsIcon />
-            </IconButton>
-            <Box sx={styles.userInfo}>
-              <Avatar sx={styles.avatar}>
-                <PersonIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={500}>Admin User</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Super Admin
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+        <PageHeader title="User Management" />
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} sm={6}>
             <Paper sx={styles.card} onClick={() => navigate('/Farmers')} style={{ cursor: 'pointer' }}>
@@ -166,8 +151,10 @@ const styles = {
   },
   card: {
     p: 3,
-    hight: 150,
+    height: 120,
+    verticalAlign: 'center',
     display: 'flex',
+    border: '1px solid #e0e0e0',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     width: 590,

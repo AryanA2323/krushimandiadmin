@@ -7,6 +7,7 @@ import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import FeedbackOutlinedIcon from '@mui/icons-material/FeedbackOutlined';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -14,7 +15,7 @@ const menuItems = [
   {
     text: 'Dashboard',
     icon: <BarChartIcon sx={{ color: '#22c55e' }} />,
-    path: '/admin',
+    path: '/Dashboard',
     color: '#22c55e'
   },
   {
@@ -46,6 +47,12 @@ const menuItems = [
     icon: <FeedbackOutlinedIcon sx={{ color: '#ef4444' }} />,
     path: '/Feedback_Complaints',
     color: '#ef4444'
+  },
+  {
+    text: 'Super Admin',
+    icon: <AdminPanelSettingsIcon sx={{ color: '#0ea5e9' }} />, 
+    path: '/SuperAdmin',
+    color: '#0ea5e9'
   },
 ];
 
@@ -128,27 +135,7 @@ export default function AdminNavbarSlider() {
             );
           })}
           {/* Super Admin (not clickable) */}
-          <ListItem
-            sx={{
-              borderRadius: 2,
-              mt: 1,
-              color: '#a855f7',
-              pl: 2,
-              minHeight: 44,
-              cursor: 'default'
-            }}
-          >
-            <ListItemIcon sx={{ color: '#a855f7', minWidth: 36 }}>
-              <ShieldOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Super Admin"
-              primaryTypographyProps={{
-                fontSize: 15,
-                fontWeight: 500,
-              }}
-            />
-          </ListItem>
+          
         </List>
       </Box>
       {/* System Info */}
