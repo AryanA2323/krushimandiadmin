@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Typography, Paper, IconButton, Avatar, Grid } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Avatar, Grid, CircularProgress } from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
@@ -11,56 +11,66 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import PageHeader from "../../components/PageHeader";
 import { Modal, TextField, Button, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 
+import { db } from '../../firebase/config';
+import { collection, getDocs, updateDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { useEffect } from 'react';
 
 
-const adminUsers = [
-  {
-    name: "Rajesh Kumar",
-    email: "rajesh@admin.com",
-    password: "admin123",
-    role: "Super Admin",
-    permissions: "All Access",
-    lastActive: "2 hours ago",
-    status: "active",
-  },
-  {
-    name: "Priya Sharma",
-    email: "priya@admin.com", 
-    password: "admin456",
-    role: "Admin",
-    permissions: "User Management",
-    lastActive: "1 day ago",
-    status: "active",
-  },
-  {
-    name: "Aryan Adhav",
-    email: "aryan@admin.com",
-    password: "admin789",
-    role: "Admin",
-    permissions: "User Management",
-    lastActive: "1 day ago",
-    status: "active",
-  },
-  {
-    name: "Yash Dhumal",
-    email: "yash@admin.com",
-    password: "admin416",
-    role: "Admin",
-    permissions: "User Management",
-    lastActive: "1 day ago",
-    status: "active",
-  },
-];
+// const adminUsers = [
+//   {
+//     name: "Rajesh Kumar",
+//     email: "rajesh@admin.com",
+//     password: "admin123",
+//     role: "Admin",
+//     permissions: "All Access",
+//     status: "active",
+//   },
+//   {
+//     name: "Priya Sharma",
+//     email: "priya@admin.com", 
+//     password: "admin456",
+//     role: "Supervisor",
+//     permissions: "User Management",
+//     status: "active",
+//   },
+// ];
 
 export default function SuperAdmin() {
   const [adminUser, setAdminUser] = useState(
     JSON.parse(localStorage.getItem('adminUser')) || null
   );
-      const [showUserModal, setShowUserModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
-  const [adminList, setAdminList] = useState(adminUsers);
+  const [adminList, setAdminList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+
+    useEffect(() => {
+    fetchAdmins();
+  }, []);
+
+
+  const fetchAdmins = async () => {
+    setIsLoading(true);
+    try {
+      const usersRef = collection(db, 'users');
+      const querySnapshot = await getDocs(usersRef);
+      const admins = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setAdminList(admins);
+      setError(null);
+    } catch (error) {
+      setError("Failed to fetch admin users");
+      console.error("Error fetching admins:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   const handleEditClick = (admin) => {
@@ -81,15 +91,51 @@ export default function SuperAdmin() {
     }));
   };
 
-  const handleEditSubmit = () => {
-  const updatedList = adminList.map(admin => 
-    admin.email === selectedAdmin.email ? selectedAdmin : admin
-  );
-  
-  setAdminList(updatedList);
-  localStorage.setItem('adminUsers', JSON.stringify(updatedList));
-  handleEditClose();
-};
+  // const handleEditSubmit = () => {
+  // const updatedList = adminList.map(admin => 
+  //   admin.email === selectedAdmin.email ? selectedAdmin : admin
+  // );
+
+  const handleEditSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const userRef = doc(db, 'users', selectedAdmin.id);
+      await updateDoc(userRef, {
+        name: selectedAdmin.name,
+        role: selectedAdmin.role,
+        permissions: selectedAdmin.permissions,
+        status: selectedAdmin.status,
+      });
+      await fetchAdmins(); // Refresh the list
+      handleEditClose();
+    } catch (error) {
+      setError("Failed to update admin");
+      console.error("Error updating admin:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+
+  const handleRemoveAdmin = async (id) => {
+    if (window.confirm('Are you sure you want to remove this admin?')) {
+      setIsLoading(true);
+      try {
+        await deleteDoc(doc(db, 'users', id));
+        await fetchAdmins(); // Refresh the list
+      } catch (error) {
+        setError("Failed to remove admin");
+        console.error("Error removing admin:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+
+
 
   return (
     <Box sx={styles.root}>
@@ -155,39 +201,54 @@ export default function SuperAdmin() {
               <Typography sx={{ flex: 2 }}>ADMIN</Typography>
               <Typography sx={{ flex: 1 }}>ROLE</Typography>
               <Typography sx={{ flex: 2 }}>PERMISSIONS</Typography>
-              <Typography sx={{ flex: 1 }}>LAST ACTIVE</Typography>
-              <Typography sx={{ flex: 1 }}>STATUS</Typography>
+
               <Typography sx={{ flex: 1 }}>ACTIONS</Typography>
             </Box>
-            {adminList.map((user, index) => (
-              <Box key={index} sx={styles.tableRow}>
-                <Box sx={{ flex: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <PersonIcon sx={{ color: '#64748b' }} />
-                  <Typography>{user.name}</Typography>
-                </Box>
-                <Typography sx={{ flex: 1 }}>{user.role}</Typography>
-                <Typography sx={{ flex: 2 }}>{user.permissions}</Typography>
-                <Typography sx={{ flex: 1 }}>{user.lastActive}</Typography>
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{
-                    ...styles.statusBadge,
-                    bgcolor: user.status === 'active' ? '#dcfce7' : '#fee2e2',
-                    color: user.status === 'active' ? '#22c55e' : '#ef4444',
-                  }}>
-                    {user.status}
+            {error && (
+              <Typography color="error" sx={{ mb: 2 }}>
+                {error}
+              </Typography>
+            )}
+
+            {isLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              adminList.map((user, index) => (
+                <Box key={index} sx={styles.tableRow}>
+                  <Box sx={{ flex: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PersonIcon sx={{ color: '#64748b' }} />
+                    <Typography>{user.name}</Typography>
+                  </Box>
+                  <Typography sx={{ flex: 1 }}>{user.role}</Typography>
+                  <Typography sx={{ flex: 2 }}>{user.permissions}</Typography>
+                  {/* <Box sx={{ flex: 1 }}>
+                    <Box sx={{
+                      ...styles.statusBadge,
+                      bgcolor: user.status === 'active' ? '#dcfce7' : '#fee2e2',
+                      color: user.status === 'active' ? '#22c55e' : '#ef4444',
+                    }}>
+                      {user.status}
+                    </Box>
+                  </Box> */}
+                  <Box sx={{ flex: 1, display: 'flex', gap: 1 }}>
+                    <Typography 
+                      sx={styles.actionLink}
+                      onClick={() => handleEditClick(user)}
+                    >
+                      Edit
+                    </Typography>
+                    <Typography 
+                      sx={styles.actionLinkDanger}
+                      onClick={() => handleRemoveAdmin(user.email)}
+                    >
+                      Remove
+                    </Typography>
                   </Box>
                 </Box>
-                <Box sx={{ flex: 1, display: 'flex', gap: 1 }}>
-                  <Typography 
-                    sx={styles.actionLink}
-                    onClick={() => handleEditClick(user)}
-                  >
-                    Edit
-                  </Typography>
-                  <Typography sx={styles.actionLinkDanger}>Remove</Typography>
-                </Box>
-              </Box>
-            ))}
+              ))
+            )}
           </Box>
         </Paper>
       </Box>
@@ -283,6 +344,7 @@ export default function SuperAdmin() {
       </Modal>
     </Box>
   );
+
 }
 
 const styles = {
@@ -478,4 +540,4 @@ const styles = {
     mt: 3,
   },
 };
-export { adminUsers };
+// export { adminUsers };

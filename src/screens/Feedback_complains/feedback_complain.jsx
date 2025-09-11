@@ -9,8 +9,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
-import { adminUsers } from '../super_admin/super_admin';
-
+import { db } from '../../firebase/config';
+import { collection, getDocs } from 'firebase/firestore';
+import { useEffect } from 'react';
 
 const feedbacks = [
   {
@@ -120,6 +121,7 @@ export default function FeedbackComplain() {
   const [feedbackList, setFeedbackList] = useState(feedbacks);
 const [assignModalOpen, setAssignModalOpen] = useState(false);
 const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [adminUsers, setAdminUsers] = useState([]);
 
   const [adminUser, setAdminUser] = useState(
     JSON.parse(localStorage.getItem('adminUser')) || null
@@ -127,6 +129,28 @@ const [selectedComplaint, setSelectedComplaint] = useState(null);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
+
+
+    useEffect(() => {
+    const fetchAdminUsers = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const admins = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setAdminUsers(admins);
+      } catch (error) {
+        console.error("Error fetching admin users:", error);
+      }
+    };
+
+    fetchAdminUsers();
+  }, []);
+
+
+
+
 
   const handleOpen = feedback => {
     setSelected(feedback);

@@ -1,6 +1,16 @@
-
-import React, { useState } from 'react';
-import { Box, Typography, Paper, IconButton, Grid, InputBase, Button, Avatar, Fade } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Typography, 
+  Paper, 
+  IconButton, 
+  Grid, 
+  InputBase, 
+  Button, 
+  Avatar, 
+  Fade,
+  CircularProgress 
+} from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,22 +22,28 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
-const fruits = [
-  { name: 'Alphonso Mango', price: 120, quantity: '10 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Fresh mangoes from farm' },
-  { name: 'Banana', price: 45, quantity: '15 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Organic bananas' },
-  { name: 'Apple', price: 90, quantity: '8 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Premium quality apples' },
-  { name: 'Grapes', price: 60, quantity: '12 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Sweet and juicy grapes' },
-  { name: 'Orange', price: 70, quantity: '20 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Citrus oranges' },
-  { name: 'Pineapple', price: 80, quantity: '5 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Fresh pineapples' },
-  { name: 'Papaya', price: 50, quantity: '10 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Ripe papayas' },
-  { name: 'Watermelon', price: 30, quantity: '25 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Refreshing watermelons' },
-];
+import { db } from '../../firebase/config';
+import { collection, getDocs } from 'firebase/firestore';
+
+
+// const fruits = [
+//   { name: 'Alphonso Mango', price: 120, quantity: '10 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Fresh mangoes from farm' },
+//   { name: 'Banana', price: 45, quantity: '15 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Organic bananas' },
+//   { name: 'Apple', price: 90, quantity: '8 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Premium quality apples' },
+//   { name: 'Grapes', price: 60, quantity: '12 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Sweet and juicy grapes' },
+//   { name: 'Orange', price: 70, quantity: '20 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Citrus oranges' },
+//   { name: 'Pineapple', price: 80, quantity: '5 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Fresh pineapples' },
+//   { name: 'Papaya', price: 50, quantity: '10 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Ripe papayas' },
+//   { name: 'Watermelon', price: 30, quantity: '25 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Refreshing watermelons' },
+// ];
 
 export default function FruitListing() {
   const [adminUser, setAdminUser] = useState(
     JSON.parse(localStorage.getItem('adminUser')) || null
   );
-  
+  const [fruits, setFruits] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
@@ -36,83 +52,186 @@ export default function FruitListing() {
     fruit.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  return (
-    <Box sx={styles.root}>
-      <AdminNavbarSlider selected="Fruit Listing" />
-      <Box sx={styles.main}>
-        <PageHeader title="Fruit Listing" />
 
-        <Grid container spacing={2}>
-          {filteredFruits.map((fruit, idx) => (
-            <Grid item xs={12} md={4} key={idx}>
-              <Paper sx={kycCardStyles.card}>
-                <Box sx={kycCardStyles.cardHeader}>
-                  <Box sx={kycCardStyles.userInfo}>
-                    <EmojiFoodBeverageIcon sx={{ color: 'success.main', fontSize: 28 }} />
-                    <Typography sx={kycCardStyles.name}>{fruit.name}</Typography>
-                  </Box>
-                  <IconButton sx={kycCardStyles.deleteBtn}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
 
-                <Box sx={kycCardStyles.details}>
-                  <Typography variant="body2">
-                    <span style={kycCardStyles.label}>💰 Price:</span>
-                    <span style={kycCardStyles.value}>₹{fruit.price}/kg</span>
-                  </Typography>
-                  <Typography variant="body2">
-                    <span style={kycCardStyles.label}>📦 Quantity:</span>
-                    <span style={kycCardStyles.value}>{fruit.quantity}</span>
-                  </Typography>
-                  <Typography variant="body2">
-                    <span style={kycCardStyles.label}>
-                      <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#388e3c' }} /> Location:
-                    </span>
-                    <span style={kycCardStyles.value}>{fruit.location}</span>
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 1, color: '#64748b', fontSize: '0.9rem' }}>
-                    {fruit.description}
-                  </Typography>
-                </Box>
+  useEffect(() => {
+    const fetchFruits = async () => {
+      if (!adminUser) {
+        navigate('/login');
+        return;
+      }
 
-                <Box sx={kycCardStyles.buttonRow}>
-                  <Button
-                    variant="contained"
-                    startIcon={<VisibilityIcon />}
-                    sx={kycCardStyles.visitBtn}
-                  >
-                    View Details
-                  </Button>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <PersonIcon sx={{ fontSize: 18, color: '#64748b' }} />
-                    <Typography sx={{ color: '#64748b', fontSize: '0.9rem' }}>
-                      {fruit.farmer}
-                    </Typography>
-                  </Box>
+      setLoading(true);
+      try {
+        const fruitsRef = collection(db, 'fruits');
+        const snapshot = await getDocs(fruitsRef);
+        const fruitsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setFruits(fruitsData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching fruits:', err);
+        setError('Failed to load fruits. Please check your permissions.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFruits();
+  }, [adminUser, navigate]);
+
+
+
+
+
+
+  
+
+ if (loading) {
+    return (
+      <Box sx={styles.root}>
+        <AdminNavbarSlider selected="Fruit Listing" />
+        <Box sx={styles.main}>
+          <PageHeader title="Fruit Listing" />
+          <Box sx={styles.loadingContainer}>
+            <CircularProgress sx={{ color: '#388e3c' }} />
+            <Typography sx={{ mt: 2, color: '#64748b' }}>Loading fruits...</Typography>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Add error state
+  if (error) {
+    return (
+      <Box sx={styles.root}>
+        <AdminNavbarSlider selected="Fruit Listing" />
+        <Box sx={styles.main}>
+          <PageHeader title="Fruit Listing" />
+          <Box sx={styles.errorContainer}>
+            <Typography color="error">{error}</Typography>
+            <Button 
+              variant="contained" 
+              onClick={() => window.location.reload()}
+              sx={{ mt: 2 }}
+            >
+              Retry
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+
+
+ return (
+  <Box sx={styles.root}>
+    <AdminNavbarSlider selected="Fruit Listing" />
+    <Box sx={styles.main}>
+      <PageHeader title="Fruit Listing" />
+
+      <Grid container spacing={2}>
+        {filteredFruits.map((fruit) => (
+          <Grid item xs={12} md={4} key={fruit.id}>
+            <Paper sx={kycCardStyles.card}>
+              <Box sx={kycCardStyles.cardHeader}>
+                <Box sx={kycCardStyles.userInfo}>
+                  <EmojiFoodBeverageIcon sx={{ color: 'success.main', fontSize: 28 }} />
+                  <Typography sx={kycCardStyles.name}>{fruit.name}</Typography>
                 </Box>
-              </Paper>
-            </Grid>
-          ))}
-          
-          {/* Add New Fruit Card */}
-          <Grid item xs={12} md={4}>
-            <Paper sx={kycCardStyles.addCard}>
-              <Box sx={kycCardStyles.addCardContent}>
-                <AddIcon sx={kycCardStyles.addIcon} />
-                <Typography sx={kycCardStyles.addText}>
-                  Add New Fruit
+                <IconButton sx={kycCardStyles.deleteBtn}>
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+
+              <Box sx={kycCardStyles.details}>
+                <Typography variant="body2">
+                  <span style={kycCardStyles.label}>💰 Price:</span>
+                  <span style={kycCardStyles.value}>₹{fruit.price_per_kg}/kg</span>
                 </Typography>
+                <Typography variant="body2">
+                  <span style={kycCardStyles.label}>📦 Quantity:</span>
+                  <span style={kycCardStyles.value}>
+                    {fruit.quantity[0]} - {fruit.quantity[1]} kg
+                  </span>
+                </Typography>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={kycCardStyles.label}>
+                    <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#388e3c', mr: 0.5 }} />
+                    Location:
+                  </span>
+                  <span style={kycCardStyles.value}>
+                    {fruit.location.city}, {fruit.location.district}, {fruit.location.state}
+                  </span>
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1, color: '#64748b', fontSize: '0.9rem' }}>
+                  {fruit.description}
+                </Typography>
+              </Box>
+
+              <Box sx={kycCardStyles.buttonRow}>
+                <Button
+                  variant="contained"
+                  startIcon={<VisibilityIcon />}
+                  sx={kycCardStyles.visitBtn}
+                >
+                  View Details
+                </Button>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography 
+                    sx={{ 
+                      color: '#64748b', 
+                      fontSize: '0.9rem',
+                      backgroundColor: fruit.status === 'sold' ? '#fee2e2' : '#dcfce7',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontWeight: 500
+                    }}
+                  >
+                    {fruit.status.charAt(0).toUpperCase() + fruit.status.slice(1)}
+                  </Typography>
+                </Box>
               </Box>
             </Paper>
           </Grid>
+        ))}
+          
+        {/* Add New Fruit Card */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={kycCardStyles.addCard}>
+            <Box sx={kycCardStyles.addCardContent}>
+              <AddIcon sx={kycCardStyles.addIcon} />
+              <Typography sx={kycCardStyles.addText}>
+                Add New Fruit
+              </Typography>
+            </Box>
+          </Paper>
         </Grid>
-      </Box>
+      </Grid>
     </Box>
-  );
+  </Box>
+);
 }
 
 const styles = {
+   loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '400px',
+  },
+  errorContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '400px',
+  },
   root: {
     display: 'flex',
   },
@@ -187,7 +306,7 @@ const kycCardStyles = {
     flexDirection: 'column',
     gap: 0,
     width: 380,
-    minHeight: 210,
+    height: 340, 
     position: 'relative',
     background: 'linear-gradient(135deg, #f8faf8 0%, #ffffff 100%)',
     border: '1px solid rgba(56,142,60,0.12)',
@@ -231,7 +350,7 @@ const kycCardStyles = {
       color: '#dc2626',
     },
   },
-  details: {
+ details: {
     px: 2.5,
     pt: 2,
     pb: 1.5,
@@ -239,20 +358,21 @@ const kycCardStyles = {
     flexDirection: 'column',
     gap: 1.2,
     background: 'transparent',
+    flex: 1, // Add flex grow
   },
   label: {
     color: '#64748b',
     fontWeight: 500,
     fontSize: 13,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 0.5,
+    display: 'inline-block', // Change to inline-block
+    minWidth: 80, // Add minimum width for alignment
   },
   value: {
     color: '#334155',
     fontWeight: 500,
     fontSize: 14,
-    ml: 0.5,
+    display: 'inline-block', // Change to inline-block
+    verticalAlign: 'top', // Align with label
   },
   buttonRow: {
     display: 'flex',
@@ -281,7 +401,7 @@ const kycCardStyles = {
     },
   },
   addCard: {
-    minHeight: 210,
+    height: 280, // Match the height of regular cards
     border: '2px dashed #388e3c',
     borderRadius: 8,
     width: 380,
