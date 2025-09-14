@@ -44,20 +44,13 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import Drawer from '@mui/material/Drawer';
+import ImageList from '@mui/material/ImageList';
+import ImageListItem from '@mui/material/ImageListItem';
+import CloseIcon from '@mui/icons-material/Close';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
-
-
-
-// const fruits = [
-//   { name: 'Alphonso Mango', price: 120, quantity: '10 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Fresh mangoes from farm' },
-//   { name: 'Banana', price: 45, quantity: '15 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Organic bananas' },
-//   { name: 'Apple', price: 90, quantity: '8 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Premium quality apples' },
-//   { name: 'Grapes', price: 60, quantity: '12 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Sweet and juicy grapes' },
-//   { name: 'Orange', price: 70, quantity: '20 kg', farmer: 'Amit Sharma', location: 'Indore', description: 'Citrus oranges' },
-//   { name: 'Pineapple', price: 80, quantity: '5 kg', farmer: 'Rahul Singh', location: 'Bhopal', description: 'Fresh pineapples' },
-//   { name: 'Papaya', price: 50, quantity: '10 kg', farmer: 'Priya Patel', location: 'Jabalpur', description: 'Ripe papayas' },
-//   { name: 'Watermelon', price: 30, quantity: '25 kg', farmer: 'Sneha Joshi', location: 'Gwalior', description: 'Refreshing watermelons' },
-// ];
 
 export default function FruitListing() {
   const [adminUser, setAdminUser] = useState(
@@ -69,6 +62,9 @@ export default function FruitListing() {
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
+
+  const [detailsDrawer, setDetailsDrawer] = useState(false);
+const [selectedFruit, setSelectedFruit] = useState(null);
 
   const filteredFruits = fruits.filter(fruit =>
     fruit.name.toLowerCase().includes(search.toLowerCase())
@@ -106,7 +102,31 @@ const [snackbar, setSnackbar] = useState({
   severity: 'success'
 });
 
-// Add these functions inside the FruitListing component
+const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+
+const handleNextImage = () => {
+  if (selectedFruit) {
+    setCurrentImageIndex((prev) => 
+      prev === selectedFruit.image_urls.length - 1 ? 0 : prev + 1
+    );
+  }
+};
+
+const handlePrevImage = () => {
+  if (selectedFruit) {
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? selectedFruit.image_urls.length - 1 : prev - 1
+    );
+  }
+};
+
+
+const handleViewDetails = (fruit) => {
+  setSelectedFruit(fruit);
+  setDetailsDrawer(true);
+};
+
 const handleDeleteClick = (fruit) => {
   setFruitToDelete(fruit);
   setDeleteDialogOpen(true);
@@ -628,6 +648,7 @@ const AddFruitModal = (
                   variant="contained"
                   startIcon={<VisibilityIcon />}
                   sx={kycCardStyles.visitBtn}
+                  onClick={() => handleViewDetails(fruit)}
                 >
                   View Details
                 </Button>
@@ -712,6 +733,238 @@ const AddFruitModal = (
     {snackbar.message}
   </Alert>
 </Snackbar>
+
+
+
+<Drawer
+  anchor="right"
+  open={detailsDrawer}
+  onClose={() => {
+    setDetailsDrawer(false);
+    setCurrentImageIndex(0);
+  }}
+  sx={{
+    '& .MuiDrawer-paper': {
+      width: '800px',
+      boxSizing: 'border-box',
+      padding: '24px',
+      background: '#f8faf8',
+    },
+  }}
+>
+  {selectedFruit && (
+    <Box sx={{ height: '100%', position: 'relative' }}>
+      <IconButton
+        onClick={() => {
+          setDetailsDrawer(false);
+          setCurrentImageIndex(0);
+        }}
+        sx={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          color: '#64748b',
+          zIndex: 1,
+        }}
+      >
+        <CloseIcon />
+      </IconButton>
+
+      <Typography variant="h5" sx={{ mb: 3, color: '#1e293b', fontWeight: 600 }}>
+        {selectedFruit.name}
+      </Typography>
+
+      {/* Image Slider */}
+      <Box sx={{ position: 'relative', width: '100%', height: '400px', mb: 3 }}>
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            bgcolor: '#000',
+          }}
+        >
+          <img
+            src={selectedFruit.image_urls[currentImageIndex]}
+            alt={`Fruit ${currentImageIndex + 1}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+          
+          {selectedFruit.image_urls.length > 1 && (
+            <>
+              <IconButton
+                onClick={handlePrevImage}
+                sx={{
+                  position: 'absolute',
+                  left: 16,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  bgcolor: 'rgba(255, 255, 255, 0.8)',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                }}
+              >
+                <ArrowBackIosIcon />
+              </IconButton>
+              
+              <IconButton
+                onClick={handleNextImage}
+                sx={{
+                  position: 'absolute',
+                  right: 16,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  bgcolor: 'rgba(255, 255, 255, 0.8)',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                }}
+              >
+                <ArrowForwardIosIcon />
+              </IconButton>
+            </>
+          )}
+        </Box>
+
+        {/* Thumbnails */}
+        {selectedFruit.image_urls.length > 1 && (
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1, 
+            mt: 2, 
+            justifyContent: 'center',
+            px: 2
+          }}>
+            {selectedFruit.image_urls.map((url, index) => (
+              <Box
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                sx={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  border: currentImageIndex === index ? '2px solid #1976d2' : '2px solid transparent',
+                  opacity: currentImageIndex === index ? 1 : 0.7,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    opacity: 1,
+                  }
+                }}
+              >
+                <img
+                  src={url}
+                  alt={`Thumbnail ${index + 1}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      {/* Fruit Details */}
+      <Stack spacing={2} sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 500px)' }}>
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Type:</Typography>
+          <Typography sx={detailStyles.value}>{selectedFruit.type}</Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Price:</Typography>
+          <Typography sx={detailStyles.value}>₹{selectedFruit.price_per_kg}/kg</Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Quantity Range:</Typography>
+          <Typography sx={detailStyles.value}>
+            {selectedFruit.quantity[0]} - {selectedFruit.quantity[1]} kg
+          </Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Location:</Typography>
+          <Typography sx={detailStyles.value}>
+            {selectedFruit.location.city}, {selectedFruit.location.district}, {selectedFruit.location.state}
+          </Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Pincode:</Typography>
+          <Typography sx={detailStyles.value}>{selectedFruit.location.pincode}</Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Status:</Typography>
+          <Typography
+            sx={{
+              ...detailStyles.value,
+              color: selectedFruit.status === 'sold' ? '#ef4444' : '#22c55e',
+              bgcolor: selectedFruit.status === 'sold' ? '#fee2e2' : '#dcfce7',
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              display: 'inline-block',
+            }}
+          >
+            {selectedFruit.status.charAt(0).toUpperCase() + selectedFruit.status.slice(1)}
+          </Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Added By:</Typography>
+          <Typography sx={detailStyles.value}>{selectedFruit.admin_name}</Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Added On:</Typography>
+          <Typography sx={detailStyles.value}>
+            {new Date(selectedFruit.created_at).toLocaleDateString()}
+          </Typography>
+        </Box>
+
+        <Box sx={detailStyles.detailRow}>
+          <Typography sx={detailStyles.label}>Available From:</Typography>
+          <Typography sx={detailStyles.value}>
+            {new Date(selectedFruit.availability_date).toLocaleDateString()}
+          </Typography>
+        </Box>
+
+        <Box sx={detailStyles.descriptionBox}>
+          <Typography sx={detailStyles.label}>Description:</Typography>
+          <Typography sx={{ ...detailStyles.value, mt: 1 }}>
+            {selectedFruit.description}
+          </Typography>
+        </Box>
+
+        <Box sx={detailStyles.statsBox}>
+          <Box sx={detailStyles.statItem}>
+            <Typography sx={detailStyles.statValue}>{selectedFruit.views}</Typography>
+            <Typography sx={detailStyles.statLabel}>Views</Typography>
+          </Box>
+          <Box sx={detailStyles.statItem}>
+            <Typography sx={detailStyles.statValue}>{selectedFruit.likes}</Typography>
+            <Typography sx={detailStyles.statLabel}>Likes</Typography>
+          </Box>
+          <Box sx={detailStyles.statItem}>
+            <Typography sx={detailStyles.statValue}>{selectedFruit.requestCount}</Typography>
+            <Typography sx={detailStyles.statLabel}>Requests</Typography>
+          </Box>
+        </Box>
+      </Stack>
+    </Box>
+  )}
+</Drawer>
+
+
   </Box>
 );
 }
@@ -954,3 +1207,51 @@ const modalStyles = {
     overflowY: 'auto'
   }
 };
+
+const detailStyles = {
+  detailRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    py: 1,
+    borderBottom: '1px solid #e2e8f0',
+  },
+  label: {
+    color: '#64748b',
+    fontWeight: 500,
+    fontSize: '0.875rem',
+  },
+  value: {
+    color: '#334155',
+    fontWeight: 500,
+    fontSize: '0.875rem',
+  },
+  descriptionBox: {
+    py: 2,
+    borderBottom: '1px solid #e2e8f0',
+  },
+  statsBox: {
+    display: 'flex',
+    justifyContent: 'space-around',
+    py: 2,
+    mt: 2,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 2,
+  },
+  statItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  statValue: {
+    color: '#0f172a',
+    fontWeight: 600,
+    fontSize: '1.25rem',
+  },
+  statLabel: {
+    color: '#64748b',
+    fontSize: '0.75rem',
+    mt: 0.5,
+  },
+};
+
