@@ -9,6 +9,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
+import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 
 
 
@@ -64,6 +65,12 @@ export default function UserManagement() {
             <Paper sx={styles.card} onClick={() => navigate('/FarmerRequest')} style={{ cursor: 'pointer' }}>
               <InventoryIcon sx={styles.icon} />
               <Typography variant="subtitle1" fontWeight="bold" mt={1}>Farmer Listing Requests</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <Paper sx={styles.card} onClick={() => navigate('/BuyerRequests')} style={{ cursor: 'pointer' }}>
+              <ShoppingBasketIcon sx={styles.icon} />
+              <Typography variant="subtitle1" fontWeight="bold" mt={1}>Buyer Requests</Typography>
             </Paper>
           </Grid>
         </Grid>

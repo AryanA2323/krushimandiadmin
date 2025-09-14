@@ -774,6 +774,26 @@ const AddFruitModal = (
         {selectedFruit.name}
       </Typography>
 
+
+
+      <Box sx={{ 
+        overflowY: 'auto',
+        flex: 1,
+        '&::-webkit-scrollbar': {
+          width: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: '#f1f1f1',
+          borderRadius: '4px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: '#888',
+          borderRadius: '4px',
+          '&:hover': {
+            background: '#666',
+          },
+        },
+      }}>
       {/* Image Slider */}
       <Box sx={{ position: 'relative', width: '100%', height: '400px', mb: 3 }}>
         <Box
@@ -872,7 +892,7 @@ const AddFruitModal = (
       </Box>
 
       {/* Fruit Details */}
-      <Stack spacing={2} sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 500px)' }}>
+      <Stack spacing={2} >
         <Box sx={detailStyles.detailRow}>
           <Typography sx={detailStyles.label}>Type:</Typography>
           <Typography sx={detailStyles.value}>{selectedFruit.type}</Typography>
@@ -960,6 +980,7 @@ const AddFruitModal = (
           </Box>
         </Box>
       </Stack>
+      </Box>
     </Box>
   )}
 </Drawer>

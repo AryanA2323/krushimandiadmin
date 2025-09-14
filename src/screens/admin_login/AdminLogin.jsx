@@ -105,80 +105,81 @@ const handleLogin = async (e) => {
 
   try {
     // First authenticate with Firebase Auth
-    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-    const user = userCredential.user;
-
-    // Then check if user exists in Firestore
-    const userDoc = await getDocs(
-      query(collection(db, 'users'), 
-      where('email', '==', email.trim()))
+    const userCredential = await signInWithEmailAndPassword(
+      auth, 
+      email.trim(), 
+      password
     );
 
-    if (userDoc.empty) {
-      throw new Error('User not found in database');
+    const user = userCredential.user;
+
+    // Check if user exists in Firestore
+    const userSnapshot = await getDocs(
+      query(
+        collection(db, 'users'),
+        where('email', '==', email.trim())
+      )
+    );
+
+    if (userSnapshot.empty) {
+      throw new Error('Account not found');
     }
 
-    const userData = userDoc.docs[0].data();
+    const userData = userSnapshot.docs[0].data();
 
-    // Verify if user is an admin
-    if (userData.role !== 'Admin' && userData.role !== 'Super Admin') {
+    // Verify admin role
+    if (!['Admin', 'Super Admin'].includes(userData.role)) {
       throw new Error('Unauthorized access');
     }
 
-    // Check if account is active
+    // Check account status
     if (userData.status !== 'active') {
-      throw new Error('Account is not active. Please contact support.');
+      throw new Error('Account is inactive');
     }
 
-    // Store admin data in localStorage
+    // Store admin data
     const adminData = {
       uid: user.uid,
+      email: user.email,
       name: userData.name,
-      email: userData.email,
       role: userData.role,
-      status: userData.status,
-      accessToken: await user.getIdToken()
+      status: userData.status
     };
-    
+
     localStorage.setItem('adminUser', JSON.stringify(adminData));
 
-    // Update last login
+    // Update last login timestamp
     await setDoc(doc(db, 'users', user.uid), {
       lastLoginAt: new Date().toISOString()
     }, { merge: true });
 
-    navigate('/Dashboard');
+    // Navigate to dashboard
+    navigate('/dashboard');
 
   } catch (error) {
     console.error('Login error:', error);
     
-    switch(error.code || error.message) {
-      case 'auth/invalid-credential':
+    switch(error.code) {
       case 'auth/invalid-email':
+        setError('Invalid email format');
+        break;
+      case 'auth/invalid-credential':
+        setError('Invalid email or password');
+        break;
       case 'auth/user-not-found':
       case 'auth/wrong-password':
         setError('Invalid email or password');
         break;
       case 'auth/too-many-requests':
-        setError('Too many failed attempts. Please try again later');
-        break;
-      case 'User not found in database':
-        setError('Account not found in system');
-        break;
-      case 'Unauthorized access':
-        setError('This account does not have admin access');
-        break;
-      case 'Account is not active. Please contact support.':
-        setError(error.message);
+        setError('Too many attempts. Try again later');
         break;
       default:
-        setError('An error occurred during login');
+        setError(error.message || 'Login failed');
     }
   } finally {
     setIsLoading(false);
   }
 };
-
 
 const handleSignup = async () => {
   setIsLoading(true);
@@ -242,53 +243,47 @@ const handleSignup = async () => {
 
 
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true); // Now setLoading is defined
-    setError(null);
+// const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true); 
+//     setError(null);
 
-    try {
-    // Sign in with Firebase Auth
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+//     try {
+//     // Sign in with Firebase Auth
+//     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+//     const user = userCredential.user;
 
-    // Store user data in localStorage
-    const adminData = {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName || 'Admin',
-      accessToken: await user.getIdToken()
-    };
+//     // Store user data in localStorage
+//     const adminData = {
+//       uid: user.uid,
+//       email: user.email,
+//       displayName: user.displayName || 'Admin',
+//       accessToken: await user.getIdToken()
+//     };
 
-    localStorage.setItem('adminUser', JSON.stringify(adminData));
+//     localStorage.setItem('adminUser', JSON.stringify(adminData));
     
-    // Navigate to dashboard
-    navigate('/dashboard');
-  } catch (error) {
-    console.error('Login error:', error);
-    switch (error.code) {
-      case 'auth/user-not-found':
-        setError('No admin account found with this email');
-        break;
-      case 'auth/wrong-password':
-        setError('Incorrect password');
-        break;
-      case 'auth/invalid-email':
-        setError('Invalid email address');
-        break;
-      default:
-        setError('Failed to login. Please try again.');
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-
-
-
+//     // Navigate to dashboard
+//     navigate('/dashboard');
+//   } catch (error) {
+//     console.error('Login error:', error);
+//     switch (error.code) {
+//       case 'auth/user-not-found':
+//         setError('No admin account found with this email');
+//         break;
+//       case 'auth/wrong-password':
+//         setError('Incorrect password');
+//         break;
+//       case 'auth/invalid-email':
+//         setError('Invalid email address');
+//         break;
+//       default:
+//         setError('Failed to login. Please try again.');
+//     }
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
 
 

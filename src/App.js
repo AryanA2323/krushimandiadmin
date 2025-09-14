@@ -14,6 +14,7 @@ import NotificationManager from './screens/Notification_manager/notification_man
 import SuperAdmin from './screens/super_admin/super_admin.jsx';
 import AdminLogin from './screens/admin_login/AdminLogin.jsx';
 import ForgotPassword from './screens/admin_login/ForgotPass.jsx'
+import BuyerRequests from './screens/UserManagement/BuyerRequests.jsx';
 import { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
@@ -54,6 +55,7 @@ function App() {
         <Route path="/SuperAdmin" element={<SuperAdmin />} />
         <Route path="/AdminLogin" element={<AdminLogin />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/BuyerRequests" element={<BuyerRequests />} />
       </Routes>
     </BrowserRouter>
   );
