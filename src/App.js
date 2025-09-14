@@ -13,8 +13,30 @@ import FeedbackComplain from './screens/Feedback_complains/feedback_complain';
 import NotificationManager from './screens/Notification_manager/notification_manager';
 import SuperAdmin from './screens/super_admin/super_admin.jsx';
 import AdminLogin from './screens/admin_login/AdminLogin.jsx';
-import ForgotPassword from './screens/admin_login/ForgotPass.jsx';
+import ForgotPassword from './screens/admin_login/ForgotPass.jsx'
+import { useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase/config';
+// ...existing code...;
 function App() {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        const adminData = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || 'Admin',
+        };
+        localStorage.setItem('adminUser', JSON.stringify(adminData));
+      } else {
+        // User is signed out
+        localStorage.removeItem('adminUser');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
   return (
     <BrowserRouter>
       <Routes>

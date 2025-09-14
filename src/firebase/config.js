@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  setPersistence, 
+  browserLocalPersistence 
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDofbj7DW13aJCh52TlowagVSAfeKEVHqg",
@@ -12,8 +17,12 @@ const firebaseConfig = {
   appId: "1:915325221809:web:3522cc30254f739b92db90",
   // measurementId: "G-2PYHX1G1BD"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
- const db = getFirestore(app);
-export { auth, db };
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// Set persistence to LOCAL
+setPersistence(auth, browserLocalPersistence);
+
+export { auth, db, storage };

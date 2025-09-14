@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Box, Typography, Paper, IconButton, Grid, TextField, Button } from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -9,6 +9,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import BlockIcon from '@mui/icons-material/Block';
 import StarIcon from '@mui/icons-material/Star';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import CircularProgress from '@mui/material/CircularProgress';
+
 
 const customers = [
   { name: 'Ravi Kumar', joined: '2023-05-10', city: 'Indore', bg: '#e6f1fb', rating: 4.8 },
@@ -32,12 +36,65 @@ const customers = [
 ];
 
 export default function Customers() {
-  const [search, setSearch] = useState('');
+
+  
+    const [search, setSearch] = useState('');
+  const [buyers, setBuyers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const filteredCustomers = customers.filter(customer =>
+
+const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(search.toLowerCase())
   );
+
+ useEffect(() => {
+    const fetchBuyers = async () => {
+      try {
+        setLoading(true);
+        const buyersRef = collection(db, 'buyers');
+        const snapshot = await getDocs(buyersRef);
+        
+        const buyersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        
+        setBuyers(buyersData);
+      } catch (err) {
+        console.error('Error fetching buyers:', err);
+        setError('Failed to load buyers');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBuyers();
+  }, []);
+
+  const filteredBuyers = buyers.filter(buyer =>
+    buyer.displayName?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
+
+
   return (
     <Box sx={styles.root}>
       <AdminNavbarSlider selected="Customers" />
@@ -59,29 +116,32 @@ export default function Customers() {
           />
         </Box>
         <Grid container spacing={2} mt={1}>
-          {filteredCustomers.map((customer, idx) => (
-            <Grid item xs={12} md={4} key={idx}>
+          {filteredBuyers.map((buyer) => (
+            <Grid item xs={12} md={4} key={buyer.id}>
               <Paper sx={kycCardStyles.card}>
                 <Box sx={kycCardStyles.cardHeader}>
                   <Box sx={kycCardStyles.userInfo}>
                     <PersonIcon sx={{ color: '#1976d2', fontSize: 28 }} />
-                    <Typography sx={kycCardStyles.name}>{customer.name}</Typography>
+                    <Typography sx={kycCardStyles.name}>{buyer.displayName || 'N/A'}</Typography>
                   </Box>
                 </Box>
                 <Box sx={kycCardStyles.details}>
                   <Typography variant="body2">
                     <span style={kycCardStyles.label}>
-                      <CalendarMonthIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> Joined: {customer.joined}
+                      <CalendarMonthIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> 
+                      Joined: {buyer.createdAt ? new Date(buyer.createdAt).toLocaleDateString() : 'N/A'}
                     </span>
                   </Typography>
                   <Typography variant="body2">
                     <span style={kycCardStyles.label}>
-                      <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> City: {customer.city}
+                      <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> 
+                      Business: {buyer.businessType || 'N/A'}
                     </span>
                   </Typography>
                   <Typography variant="body2">
                     <span style={kycCardStyles.label}>
-                      <StarIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#facc15' }} /> Rating: {customer.rating}
+                      <StarIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#facc15' }} /> 
+                      Status: {buyer.status || 'N/A'}
                     </span>
                   </Typography>
                 </Box>
@@ -91,6 +151,7 @@ export default function Customers() {
                     color="error"
                     sx={kycCardStyles.rejectBtn}
                     startIcon={<BlockIcon />}
+                    // onClick={() => handleBlockUser(buyer.id)}
                   >
                     Block
                   </Button>
@@ -98,6 +159,7 @@ export default function Customers() {
                     variant="contained"
                     startIcon={<VisibilityIcon />}
                     sx={kycCardStyles.visitBtn}
+                    // onClick={() => handleViewDetails(buyer.id)}
                   >
                     View
                   </Button>
@@ -110,6 +172,8 @@ export default function Customers() {
     </Box>
   );
 }
+
+
 
 const styles = {
   root: {

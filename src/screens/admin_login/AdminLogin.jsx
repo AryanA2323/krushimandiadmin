@@ -31,8 +31,6 @@ import {
 } from 'react-icons/fa';
 
 
-
-
 const initialAdminState = {
   name: '',
   email: '',
@@ -52,7 +50,8 @@ export default function AdminLogin() {
   
   const [newAdmin, setNewAdmin] = useState(initialAdminState);
 
-
+  const [loading, setLoading] = useState(false);
+  
  
 
 
@@ -105,50 +104,75 @@ const handleLogin = async (e) => {
   setIsLoading(true);
 
   try {
-    // First check if user exists in Firestore
-    const userQuery = query(
-      collection(db, 'users'), 
-      where('email', '==', email.trim())
-    );
-    const userSnapshot = await getDocs(userQuery);
+    // First authenticate with Firebase Auth
+    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+    const user = userCredential.user;
 
-    if (userSnapshot.empty) {
-      // If user doesn't exist in Firestore, show signup modal
-      handleSignupModalOpen();
-      setIsLoading(false);
-      return;
+    // Then check if user exists in Firestore
+    const userDoc = await getDocs(
+      query(collection(db, 'users'), 
+      where('email', '==', email.trim()))
+    );
+
+    if (userDoc.empty) {
+      throw new Error('User not found in database');
     }
 
-    // User exists in Firestore, now try Firebase Auth
-    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-    const userData = userSnapshot.docs[0].data();
+    const userData = userDoc.docs[0].data();
+
+    // Verify if user is an admin
+    if (userData.role !== 'Admin' && userData.role !== 'Super Admin') {
+      throw new Error('Unauthorized access');
+    }
+
+    // Check if account is active
+    if (userData.status !== 'active') {
+      throw new Error('Account is not active. Please contact support.');
+    }
 
     // Store admin data in localStorage
     const adminData = {
-      id: userCredential.user.uid,
+      uid: user.uid,
       name: userData.name,
       email: userData.email,
-      role: userData.role
+      role: userData.role,
+      status: userData.status,
+      accessToken: await user.getIdToken()
     };
     
     localStorage.setItem('adminUser', JSON.stringify(adminData));
+
+    // Update last login
+    await setDoc(doc(db, 'users', user.uid), {
+      lastLoginAt: new Date().toISOString()
+    }, { merge: true });
+
     navigate('/Dashboard');
 
   } catch (error) {
-    console.error('Login error:', error.code, error.message);
+    console.error('Login error:', error);
     
-    switch (error.code) {
+    switch(error.code || error.message) {
       case 'auth/invalid-credential':
       case 'auth/invalid-email':
       case 'auth/user-not-found':
       case 'auth/wrong-password':
-        setError('Invalid email or password. Please try again.');
+        setError('Invalid email or password');
         break;
       case 'auth/too-many-requests':
-        setError('Too many failed attempts. Please try again later.');
+        setError('Too many failed attempts. Please try again later');
+        break;
+      case 'User not found in database':
+        setError('Account not found in system');
+        break;
+      case 'Unauthorized access':
+        setError('This account does not have admin access');
+        break;
+      case 'Account is not active. Please contact support.':
+        setError(error.message);
         break;
       default:
-        setError('An error occurred during login. Please try again.');
+        setError('An error occurred during login');
     }
   } finally {
     setIsLoading(false);
@@ -217,6 +241,48 @@ const handleSignup = async () => {
 };
 
 
+
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true); // Now setLoading is defined
+    setError(null);
+
+    try {
+    // Sign in with Firebase Auth
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Store user data in localStorage
+    const adminData = {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || 'Admin',
+      accessToken: await user.getIdToken()
+    };
+
+    localStorage.setItem('adminUser', JSON.stringify(adminData));
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
+  } catch (error) {
+    console.error('Login error:', error);
+    switch (error.code) {
+      case 'auth/user-not-found':
+        setError('No admin account found with this email');
+        break;
+      case 'auth/wrong-password':
+        setError('Incorrect password');
+        break;
+      case 'auth/invalid-email':
+        setError('Invalid email address');
+        break;
+      default:
+        setError('Failed to login. Please try again.');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
 
 

@@ -9,7 +9,15 @@ import {
   Button, 
   Avatar, 
   Fade,
-  CircularProgress 
+  CircularProgress,
+  Modal,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
+  InputAdornment
 } from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -22,8 +30,22 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
-import { db } from '../../firebase/config';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { db, storage } from '../../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { deleteDoc, doc } from 'firebase/firestore';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+
+
 
 
 // const fruits = [
@@ -51,6 +73,85 @@ export default function FruitListing() {
   const filteredFruits = fruits.filter(fruit =>
     fruit.name.toLowerCase().includes(search.toLowerCase())
   );
+
+const [openModal, setOpenModal] = useState(false);
+const [newFruit, setNewFruit] = useState({
+  name: '',
+  type: '',
+  description: '',
+  price_per_kg: '',
+  quantity: [0, 0],
+  availability_date: new Date(),
+  location: {
+    city: '',
+    district: '',
+    state: '',
+    pincode: '',
+    lat: 0,
+    lng: 0
+  },
+  status: 'active',
+  images: [],
+  admin_name: '' 
+});
+const [imageFiles, setImageFiles] = useState([]);
+
+
+
+const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+const [fruitToDelete, setFruitToDelete] = useState(null);
+const [snackbar, setSnackbar] = useState({
+  open: false,
+  message: '',
+  severity: 'success'
+});
+
+// Add these functions inside the FruitListing component
+const handleDeleteClick = (fruit) => {
+  setFruitToDelete(fruit);
+  setDeleteDialogOpen(true);
+};
+
+const handleDeleteConfirm = async () => {
+  if (!fruitToDelete) return;
+
+  try {
+    setLoading(true);
+    await deleteDoc(doc(db, 'fruits', fruitToDelete.id));
+    
+    // Update local state
+    setFruits(fruits.filter(fruit => fruit.id !== fruitToDelete.id));
+    
+    // Show success message
+    setSnackbar({
+      open: true,
+      message: 'Fruit deleted successfully!',
+      severity: 'success'
+    });
+  } catch (error) {
+    console.error('Error deleting fruit:', error);
+    setSnackbar({
+      open: true,
+      message: 'Failed to delete fruit. Please try again.',
+      severity: 'error'
+    });
+  } finally {
+    setDeleteDialogOpen(false);
+    setFruitToDelete(null);
+    setLoading(false);
+  }
+};
+
+const handleDeleteCancel = () => {
+  setDeleteDialogOpen(false);
+  setFruitToDelete(null);
+};
+
+const handleSnackbarClose = () => {
+  setSnackbar({ ...snackbar, open: false });
+};
+
+
 
 
 
@@ -82,6 +183,20 @@ export default function FruitListing() {
     fetchFruits();
   }, [adminUser, navigate]);
 
+
+
+  useEffect(() => {
+  const checkAuth = async () => {
+    const user = JSON.parse(localStorage.getItem('adminUser'));
+    if (!user || !user.uid) {
+      navigate('/login');
+      return;
+    }
+    setAdminUser(user);
+  };
+
+  checkAuth();
+}, [navigate]);
 
 
 
@@ -126,8 +241,340 @@ export default function FruitListing() {
     );
   }
 
+const handleModalOpen = () => setOpenModal(true);
+const handleModalClose = () => {
+  setOpenModal(false);
+  setNewFruit({
+    name: '',
+    type: '',
+    description: '',
+    price_per_kg: '',
+    quantity: [0, 0],
+    availability_date: new Date(),
+    location: {
+      city: '',
+      district: '',
+      state: '',
+      pincode: '',
+      lat: 0,
+      lng: 0
+    },
+    status: 'active',
+    images: [],
+  });
+  setImageFiles([]);
+};
+
+const handleImageUpload = async (event) => {
+  const files = Array.from(event.target.files);
+  if (files.length > 4) {
+    alert('Maximum 4 images allowed');
+    return;
+  }
+  setImageFiles(files);
+};
+
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+//   setLoading(true);
+
+//   try {
+//     const formattedDate = newFruit.availability_date.toISOString();
+    
+//     const imageUrls = await Promise.all(
+//       imageFiles.map(async (file) => {
+//         const storageRef = ref(storage, `fruits/${adminUser.uid}/${Date.now()}_${file.name}`);
+//         await uploadBytes(storageRef, file);
+//         return getDownloadURL(storageRef);
+//       })
+//     );
+
+//     const fruitData = {
+//       name: newFruit.name,
+//       type: newFruit.type.toLowerCase(),
+//       description: newFruit.description,
+//       price_per_kg: Number(newFruit.price_per_kg),
+//       quantity: [Number(newFruit.quantity[0]), Number(newFruit.quantity[1])],
+//       availability_date: formattedDate,
+//       location: {
+//         city: newFruit.location.city,
+//         district: newFruit.location.district,
+//         state: newFruit.location.state,
+//         pincode: newFruit.location.pincode,
+//         lat: Number(newFruit.location.lat) || 0,
+//         lng: Number(newFruit.location.lng) || 0
+//       },
+//       status: newFruit.status,
+//       image_urls: imageUrls, 
+//       created_at: new Date().toISOString(),
+//       updated_at: new Date().toISOString(),
+//       likes: 0,
+//       views: 0,
+//       requestCount: 0,
+//       lastRequestAt: new Date()
+//     };
+
+//     // Update validation
+//     if (!fruitData.admin_name) {
+//       throw new Error('Admin name is required');
+//     }
+
+//     const docRef = await addDoc(collection(db, 'fruits'), fruitData);
+//     setFruits(prevFruits => [...prevFruits, { ...fruitData, id: docRef.id }]);
+//     handleModalClose();
+    
+//   } catch (error) {
+//     console.error('Error adding fruit:', error);
+//     setError(error.message || 'Failed to add fruit');
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    // Validate required fields first
+    if (!adminUser) {
+      throw new Error('Please login again');
+    }
+
+    if (!imageFiles.length) {
+      throw new Error('Please upload at least one image');
+    }
+
+    const formattedDate = newFruit.availability_date.toISOString();
+    
+    const imageUrls = await Promise.all(
+      imageFiles.map(async (file) => {
+        const storageRef = ref(storage, `fruits/${adminUser.uid}/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        return getDownloadURL(storageRef);
+      })
+    );
+
+    const fruitData = {
+      name: newFruit.name,
+      type: newFruit.type.toLowerCase(),
+      description: newFruit.description,
+      price_per_kg: Number(newFruit.price_per_kg),
+      quantity: [Number(newFruit.quantity[0]), Number(newFruit.quantity[1])],
+      availability_date: formattedDate,
+      location: {
+        city: newFruit.location.city,
+        district: newFruit.location.district,
+        state: newFruit.location.state,
+        pincode: newFruit.location.pincode,
+        lat: Number(newFruit.location.lat) || 0,
+        lng: Number(newFruit.location.lng) || 0
+      },
+      status: newFruit.status,
+      image_urls: imageUrls,
+      admin_name: adminUser.displayName || 'Admin', // Add admin name
+      admin_id: adminUser.uid, // Add admin ID for reference
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likes: 0,
+      views: 0,
+      requestCount: 0,
+      lastRequestAt: new Date()
+    };
+
+    // Validate required fields
+    const requiredFields = ['name', 'type', 'description', 'price_per_kg'];
+    for (const field of requiredFields) {
+      if (!fruitData[field]) {
+        throw new Error(`${field.replace('_', ' ')} is required`);
+      }
+    }
+
+    const docRef = await addDoc(collection(db, 'fruits'), fruitData);
+    
+    // Update local state and show success message
+    setFruits(prevFruits => [...prevFruits, { ...fruitData, id: docRef.id }]);
+    setSnackbar({
+      open: true,
+      message: 'Fruit added successfully!',
+      severity: 'success'
+    });
+    handleModalClose();
+    
+  } catch (error) {
+    console.error('Error adding fruit:', error);
+    setSnackbar({
+      open: true,
+      message: error.message || 'Failed to add fruit',
+      severity: 'error'
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+const AddFruitModal = (
+  <Modal
+    open={openModal}
+    onClose={handleModalClose}
+    aria-labelledby="add-fruit-modal"
+  >
+    <Box sx={modalStyles.modal}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Add New Fruit</Typography>
+      <form onSubmit={handleSubmit}>
+        <Stack spacing={2}>
+          <TextField
+            required
+            label="Fruit Name"
+            value={newFruit.name}
+            onChange={(e) => setNewFruit({...newFruit, name: e.target.value})}
+          />
+          
+          <TextField
+            required
+            label="Fruit Type"
+            value={newFruit.type}
+            onChange={(e) => setNewFruit({...newFruit, type: e.target.value})}
+          />
+
+          <TextField
+            required
+            label="Description"
+            multiline
+            rows={3}
+            value={newFruit.description}
+            onChange={(e) => setNewFruit({...newFruit, description: e.target.value})}
+          />
+
+          <TextField
+            required
+            label="Price per kg"
+            type="number"
+            InputProps={{
+              startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+            }}
+            value={newFruit.price_per_kg}
+            onChange={(e) => setNewFruit({...newFruit, price_per_kg: Number(e.target.value)})}
+          />
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              required
+              label="Min Quantity"
+              type="number"
+              value={newFruit.quantity[0]}
+              onChange={(e) => setNewFruit({
+                ...newFruit, 
+                quantity: [Number(e.target.value), newFruit.quantity[1]]
+              })}
+            />
+            <TextField
+              required
+              label="Max Quantity"
+              type="number"
+              value={newFruit.quantity[1]}
+              onChange={(e) => setNewFruit({
+                ...newFruit, 
+                quantity: [newFruit.quantity[0], Number(e.target.value)]
+              })}
+            />
+          </Box>
+
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Availability Date"
+              value={newFruit.availability_date}
+              onChange={(newValue) => setNewFruit({...newFruit, availability_date: newValue})}
+            />
+          </LocalizationProvider>
+
+          <TextField
+            required
+            label="City"
+            value={newFruit.location.city}
+            onChange={(e) => setNewFruit({
+              ...newFruit, 
+              location: {...newFruit.location, city: e.target.value}
+            })}
+          />
+
+          <TextField
+            required
+            label="District"
+            value={newFruit.location.district}
+            onChange={(e) => setNewFruit({
+              ...newFruit, 
+              location: {...newFruit.location, district: e.target.value}
+            })}
+          />
+
+          <TextField
+            required
+            label="State"
+            value={newFruit.location.state}
+            onChange={(e) => setNewFruit({
+              ...newFruit, 
+              location: {...newFruit.location, state: e.target.value}
+            })}
+          />
+
+          <TextField
+            required
+            label="Pincode"
+            value={newFruit.location.pincode}
+            onChange={(e) => setNewFruit({
+              ...newFruit, 
+              location: {...newFruit.location, pincode: e.target.value}
+            })}
+          />
+
+          <FormControl>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={newFruit.status}
+              label="Status"
+              onChange={(e) => setNewFruit({...newFruit, status: e.target.value})}
+            >
+              <MenuItem value="active">Active</MenuItem>
+              <MenuItem value="sold">Sold</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            component="label"
+          >
+            Upload Images (Max 4)
+            <input
+              type="file"
+              hidden
+              multiple
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
+          </Button>
+          {imageFiles.length > 0 && (
+            <Typography variant="caption">
+              {imageFiles.length} images selected
+            </Typography>
+          )}
+
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={loading}
+          >
+            {loading ? 'Adding...' : 'Add Fruit'}
+          </Button>
+        </Stack>
+      </form>
+    </Box>
+  </Modal>
+);
  return (
   <Box sx={styles.root}>
     <AdminNavbarSlider selected="Fruit Listing" />
@@ -143,7 +590,10 @@ export default function FruitListing() {
                   <EmojiFoodBeverageIcon sx={{ color: 'success.main', fontSize: 28 }} />
                   <Typography sx={kycCardStyles.name}>{fruit.name}</Typography>
                 </Box>
-                <IconButton sx={kycCardStyles.deleteBtn}>
+                <IconButton 
+                  sx={kycCardStyles.deleteBtn}
+                  onClick={() => handleDeleteClick(fruit)}
+                >
                   <DeleteIcon />
                 </IconButton>
               </Box>
@@ -202,7 +652,7 @@ export default function FruitListing() {
           
         {/* Add New Fruit Card */}
         <Grid item xs={12} md={4}>
-          <Paper sx={kycCardStyles.addCard}>
+          <Paper sx={kycCardStyles.addCard} onClick={handleModalOpen}>
             <Box sx={kycCardStyles.addCardContent}>
               <AddIcon sx={kycCardStyles.addIcon} />
               <Typography sx={kycCardStyles.addText}>
@@ -213,6 +663,55 @@ export default function FruitListing() {
         </Grid>
       </Grid>
     </Box>
+    {AddFruitModal}
+    <Dialog
+  open={deleteDialogOpen}
+  onClose={handleDeleteCancel}
+  aria-labelledby="delete-dialog-title"
+  aria-describedby="delete-dialog-description"
+>
+  <DialogTitle id="delete-dialog-title">
+    Confirm Delete
+  </DialogTitle>
+  <DialogContent>
+    <DialogContentText id="delete-dialog-description">
+      Are you sure you want to permanently delete this fruit? This action cannot be undone.
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button 
+      onClick={handleDeleteCancel} 
+      color="primary"
+      disabled={loading}
+    >
+      Cancel
+    </Button>
+    <Button 
+      onClick={handleDeleteConfirm} 
+      color="error" 
+      variant="contained"
+      disabled={loading}
+    >
+      {loading ? 'Deleting...' : 'Delete'}
+    </Button>
+  </DialogActions>
+</Dialog>
+
+<Snackbar
+  open={snackbar.open}
+  autoHideDuration={6000}
+  onClose={handleSnackbarClose}
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+>
+  <Alert 
+    onClose={handleSnackbarClose} 
+    severity={snackbar.severity}
+    variant="filled"
+    sx={{ width: '100%' }}
+  >
+    {snackbar.message}
+  </Alert>
+</Snackbar>
   </Box>
 );
 }
@@ -439,4 +938,19 @@ const kycCardStyles = {
     fontWeight: 600,
     fontSize: 18,
   },
+};
+const modalStyles = {
+  modal: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+    borderRadius: 2,
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  }
 };
