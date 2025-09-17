@@ -1,5 +1,5 @@
-import React, { useState,useEffect } from 'react';
-import { Box, Typography, Paper, IconButton, Grid, TextField, Button } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Paper, IconButton, Grid, TextField, Button, Avatar, Chip } from '@mui/material';
 import AdminNavbarSlider from '../../components/AdminNavbarSlider';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -9,7 +9,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import BlockIcon from '@mui/icons-material/Block';
 import StarIcon from '@mui/icons-material/Star';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore'; 
 import { db } from '../../firebase/config';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -37,45 +37,44 @@ const customers = [
 
 export default function Customers() {
 
-  
-    const [search, setSearch] = useState('');
-  const [buyers, setBuyers] = useState([]);
+  const [search, setSearch] = useState(''); // Add search state
+  const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
 
 const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(search.toLowerCase())
   );
 
  useEffect(() => {
-    const fetchBuyers = async () => {
-      try {
-        setLoading(true);
-        const buyersRef = collection(db, 'buyers');
-        const snapshot = await getDocs(buyersRef);
-        
-        const buyersData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        
-        setBuyers(buyersData);
-      } catch (err) {
-        console.error('Error fetching buyers:', err);
-        setError('Failed to load buyers');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBuyerProfiles = async () => {
+    try {
+      setLoading(true);
+      const profilesRef = collection(db, 'profiles');
+      const q = query(profilesRef, where('userRole', '==', 'buyer'));
+      const snapshot = await getDocs(q);
+      
+      const profilesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      
+      setProfiles(profilesData);
+    } catch (err) {
+      console.error('Error fetching buyer profiles:', err);
+      setError('Failed to load buyer profiles');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchBuyers();
-  }, []);
+  fetchBuyerProfiles();
+}, []);
 
-  const filteredBuyers = buyers.filter(buyer =>
-    buyer.displayName?.toLowerCase().includes(search.toLowerCase())
-  );
+const filteredProfiles = profiles.filter(profile =>
+  profile.displayName?.toLowerCase().includes(search.toLowerCase())
+);
 
   if (loading) {
     return (
@@ -116,63 +115,91 @@ const filteredCustomers = customers.filter(customer =>
           />
         </Box>
         <Grid container spacing={2} mt={1}>
-          {filteredBuyers.map((buyer) => (
-            <Grid item xs={12} md={4} key={buyer.id}>
-              <Paper sx={kycCardStyles.card}>
-                <Box sx={kycCardStyles.cardHeader}>
-                  <Box sx={kycCardStyles.userInfo}>
-                    <PersonIcon sx={{ color: '#1976d2', fontSize: 28 }} />
-                    <Typography sx={kycCardStyles.name}>{buyer.displayName || 'N/A'}</Typography>
-                  </Box>
-                </Box>
-                <Box sx={kycCardStyles.details}>
-                  <Typography variant="body2">
-                    <span style={kycCardStyles.label}>
-                      <CalendarMonthIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> 
-                      Joined: {buyer.createdAt ? new Date(buyer.createdAt).toLocaleDateString() : 'N/A'}
-                    </span>
-                  </Typography>
-                  <Typography variant="body2">
-                    <span style={kycCardStyles.label}>
-                      <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> 
-                      Business: {buyer.businessType || 'N/A'}
-                    </span>
-                  </Typography>
-                  <Typography variant="body2">
-                    <span style={kycCardStyles.label}>
-                      <StarIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#facc15' }} /> 
-                      Status: {buyer.status || 'N/A'}
-                    </span>
-                  </Typography>
-                </Box>
-                <Box sx={kycCardStyles.buttonRow}>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    sx={kycCardStyles.rejectBtn}
-                    startIcon={<BlockIcon />}
-                    // onClick={() => handleBlockUser(buyer.id)}
-                  >
-                    Block
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<VisibilityIcon />}
-                    sx={kycCardStyles.visitBtn}
-                    // onClick={() => handleViewDetails(buyer.id)}
-                  >
-                    View
-                  </Button>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+  {filteredProfiles.map((profile) => (
+    <Grid item xs={12} md={4} key={profile.id}>
+      <Paper sx={kycCardStyles.card}>
+        <Box sx={kycCardStyles.cardHeader}>
+          <Box sx={kycCardStyles.userInfo}>
+            {profile.profileImage ? (
+              <Avatar 
+                src={profile.profileImage} 
+                sx={{ width: 40, height: 40 }} 
+              />
+            ) : (
+              <PersonIcon sx={{ color: '#1976d2', fontSize: 28 }} />
+            )}
+            <Typography sx={kycCardStyles.name}>
+              {profile.displayName || `${profile.firstName} ${profile.lastName}`}
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={kycCardStyles.details}>
+          <Typography variant="body2">
+            <span style={kycCardStyles.label}>
+              <CalendarMonthIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> 
+              Joined: {profile.createdAt ? new Date(profile.createdAt.toDate()).toLocaleDateString() : 'N/A'}
+            </span>
+          </Typography>
+          <Typography variant="body2">
+            <span style={kycCardStyles.label}>
+              <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#1976d2' }} /> 
+              Business: {profile.businessType || 'N/A'}
+            </span>
+          </Typography>
+          <Typography variant="body2">
+            <span style={kycCardStyles.label}>
+              📱 Phone: {profile.phoneNumber || 'N/A'}
+            </span>
+          </Typography>
+          <Typography variant="body2">
+            <span style={kycCardStyles.label}>
+              📍 Location: {profile.location?.city}, {profile.location?.district}, {profile.location?.state}
+            </span>
+          </Typography>
+          {profile.PreferedFruits && profile.PreferedFruits.length > 0 && (
+            <Typography variant="body2">
+              <span style={kycCardStyles.label}>
+                🍎 Preferred Fruits: {profile.PreferedFruits.join(', ')}
+              </span>
+            </Typography>
+          )}
+          <Typography variant="body2">
+            <span style={kycCardStyles.label}>
+              <StarIcon sx={{ fontSize: 16, verticalAlign: 'middle', color: '#facc15' }} /> 
+              Status: <Chip 
+                label={profile.status}
+                size="small"
+                color={profile.status === 'active' ? 'success' : 'error'}
+                sx={{ ml: 1 }}
+              />
+            </span>
+          </Typography>
+        </Box>
+        <Box sx={kycCardStyles.buttonRow}>
+          <Button
+            variant="contained"
+            color="error"
+            sx={kycCardStyles.rejectBtn}
+            startIcon={<BlockIcon />}
+          >
+            Block
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<VisibilityIcon />}
+            sx={kycCardStyles.visitBtn}
+          >
+            View Details
+          </Button>
+        </Box>
+      </Paper>
+    </Grid>
+  ))}
+</Grid>
       </Box>
     </Box>
   );
 }
-
 
 
 const styles = {
@@ -213,7 +240,8 @@ const kycCardStyles = {
     flexDirection: 'column',
     gap: 0,
     width: 380,
-    minHeight: 210,
+    // minHeight: 210,
+    height: '350px',
     position: 'relative',
     background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
     border: '1px solid rgba(25,118,210,0.12)',
